@@ -38,6 +38,37 @@
 ; NOP
 #define OLED_CMD_NOP 				0xE3
 
+    
+oledLoadFont
+    ;load font data
+    clrf TBLPTRU, access
+    movlw high(font3x5)
+    movwf TBLPTRH, access
+    movlw font3x5 - .32
+    addwf oledChar, w, access
+    movwf TBLPTRL, access
+    movff TABLAT, oledFontData
+    incf TBLPTRL, f
+    movff TABLAT, oledFontData+1
+    
+
+;assume oledChars has been loaded with the characters to draw
+oledFontSegment
+    clrf oledOutPixels, access
+    ;find this character
+    
+    
+
+    
+    
+    
+    
+oledIsr
+ 
+    btfss PIR1, SSPIF, access
+
+    
+    return
 
 i2cWait
     btfss PIR1, SSPIF, access
@@ -112,18 +143,18 @@ oledDrawSequence ; 7 bytes
 oledInitSequence ; 26 bytes
 
     db OLED_CONTROL_BYTE_CMD_STREAM, OLED_CMD_DISPLAY_OFF
-    db OLED_CMD_SET_MUX_RATIO, 0x3F
-    db OLED_CMD_SET_DISPLAY_OFFSET, 0x00
-    db OLED_CMD_SET_DISPLAY_START_LINE, OLED_CMD_SET_SEGMENT_REMAP
-    db OLED_CMD_SET_COM_SCAN_MODE, OLED_CMD_SET_COM_PIN_MAP
-    db 0x12, OLED_CMD_SET_CONTRAST
-    db 0x7F, OLED_CMD_DISPLAY_RAM
-    db OLED_CMD_DISPLAY_NORMAL, OLED_CMD_SET_DISPLAY_CLK_DIV
+    db OLED_CMD_SET_MUX_RATIO, 0x3F ; DELETE ME, default is 63 (0x3f)
+    db OLED_CMD_SET_DISPLAY_OFFSET, 0x00 ; DELETE ME, default is 0
+    db OLED_CMD_SET_DISPLAY_START_LINE, OLED_CMD_SET_SEGMENT_REMAP ; DELETE ME start line is default, seg remap needs to stay
+    db OLED_CMD_SET_COM_SCAN_MODE, OLED_CMD_SET_COM_PIN_MAP ; delete pin map (defaults) and 0x12
+    db 0x12, OLED_CMD_SET_CONTRAST ; delete contrast and 7f ,defaults
+    db 0x7F, OLED_CMD_DISPLAY_RAM ; delete display ram, its default
+    db OLED_CMD_DISPLAY_NORMAL, OLED_CMD_SET_DISPLAY_CLK_DIV; delete normal, its default, delete clock div and 0x80, its default
     db 0x80, OLED_CMD_SET_CHARGE_PUMP
-    db 0x14, OLED_CMD_SET_PRECHARGE
-    db 0x22, OLED_CMD_SET_VCOMH_DESELCT
-    db 0x30, OLED_CMD_SET_MEMORY_ADDR_MODE
-    db 0x00, OLED_CMD_DISPLAY_ON    
+    db 0x14, OLED_CMD_SET_PRECHARGE ; delete precharge and 0x22, defaults
+    db 0x22, OLED_CMD_SET_VCOMH_DESELCT ;TODO try with out chaning this to 0x30 (.83 x vcc) default is 0x77 vcc
+    db 0x30, OLED_CMD_SET_MEMORY_ADDR_MODE ;TODO could use page mode, write setup is simplier too
+    db 0x00, OLED_CMD_DISPLAY_ON
 ;    
 ;    ; Tell the SSD1306 that a command stream is incoming
 ;    db OLED_CONTROL_BYTE_CMD_STREAM

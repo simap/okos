@@ -42,16 +42,8 @@ banked	equ	1
 
 ; TODO PLACE VARIABLE DEFINITIONS GO HERE
 
-    udata
-		
-    access_ovr
-flags		res 1; flag bit register
-W_TEMP		res 1    
-STATUS_TEMP	res 1
-BSR_TEMP	res 1
-TBLPTR_TEMP	res 2
-oledWriteCount	res 1
-oledState	res 1
+#include <memory.asm>
+
 
 
 ;*******************************************************************************
@@ -103,19 +95,19 @@ HIGHISR       CODE    0x0008
 
 LOWISR       CODE    0x0018
 isr:
-    MOVWF W_TEMP, access
-    MOVFF STATUS, STATUS_TEMP
-    MOVFF BSR, BSR_TEMP
+    movwf W_TEMP, access
+    movff STATUS, STATUS_TEMP
+    movff BSR, BSR_TEMP
     movff TBLPTRL, TBLPTR_TEMP+0
     movff TBLPTRH, TBLPTR_TEMP+1
 
-    
+    rcall oledIsr
     
     movff TBLPTR_TEMP+0, TBLPTRL
     movff TBLPTR_TEMP+1, TBLPTRH
-    MOVFF BSR_TEMP, BSR
-    MOVF W_TEMP, W, access
-    MOVFF STATUS_TEMP, STATUS
+    movff BSR_TEMP, BSR
+    movf W_TEMP, W, access
+    movff STATUS_TEMP, STATUS
     RETFIE
 
 ;----------------------------------PIC18's--------------------------------------
@@ -144,8 +136,9 @@ isr:
 ; MAIN PROGRAM
 ;*******************************************************************************    
     
-        
 
+FONT_TABLE CODE 
+     #include <font.asm>
     
 MAIN_PROG CODE                      ; let linker place main program
  
@@ -160,24 +153,24 @@ START
     
     
 mainloop:
-;    rcall oledPrepDraw
-;    clrf oledWriteCount, access
-;    rcall i2cStart
-;    movlw OLED_CONTROL_BYTE_DATA_STREAM
-;    rcall i2cWrite
-;drawLoop:
-;    movf TMR0, w, access
-;;    movlw 0x00
-;    rcall i2cWrite
-;    movf TMR0, w, access
-;    rcall i2cWrite
-;    movf TMR0, w, access
-;    rcall i2cWrite
-;    movf TMR0, w, access
-;    rcall i2cWrite
-;    decfsz oledWriteCount, f, access
-;    bra drawLoop
-;    rcall i2cStop
+    rcall oledPrepDraw
+    clrf oledWriteCount, access
+    rcall i2cStart
+    movlw OLED_CONTROL_BYTE_DATA_STREAM
+    rcall i2cWrite
+drawLoop:
+    movf TMR0, w, access
+;    movlw 0x00
+    rcall i2cWrite
+    movf TMR0, w, access
+    rcall i2cWrite
+    movf TMR0, w, access
+    rcall i2cWrite
+    movf TMR0, w, access
+    rcall i2cWrite
+    decfsz oledWriteCount, f, access
+    bra drawLoop
+    rcall i2cStop
     bra mainloop
     
 
