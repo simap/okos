@@ -91,11 +91,12 @@ function printFontTable() {
       var lower = ( "00" + (pixel & 0xff).toString(16)).substr(-2);
 
       var hex = ("0000" + getChar(i).toString(16)).substr(-4);
-      console.log("db\t0x" + lower + ",0x" + upper + "\t;" + i + " '" + String.fromCodePoint(i) + "'");
+      console.log("db\t0x" + upper + ",0x" + lower + "\t;" + i + " '" + String.fromCodePoint(i) + "'");
    }
 }
+printFontTable();
 
-testDraw();
+// testDraw();
 
 // for (var y = 12; y < 12+5; y++)
 //    for (var x = 4; x < 8; x++)
@@ -121,7 +122,7 @@ function testDraw() {
    var segments = w;
    var rows = h/8;
 
-   var screen = [];
+   var display = [];
 
    var chars = [
       [65, 66, 67, 68],
@@ -190,8 +191,6 @@ function testDraw() {
          var c2Pixels = getCharSegment(cr1+1, col, cSegment);
 
          var segmentPixels = (c1Pixels>>(rowC*2)) | (c2Pixels<<(6-rowC*2));
-
-
 
          console.log(segment, row, hexByte(c1Pixels), hexByte(c2Pixels), hexByte(segmentPixels));
 

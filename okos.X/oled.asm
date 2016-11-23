@@ -18,9 +18,12 @@
 #define OLED_CMD_SET_MEMORY_ADDR_MODE	0x20	; follow with 0x00 = HORZ mode = Behave like a KS108 graphic LCD
 #define OLED_CMD_SET_COLUMN_RANGE		0x21	; can be used only in HORZ/VERT mode - follow with 0x00 + 0x7F = COL127
 #define OLED_CMD_SET_PAGE_RANGE			0x22	; can be used only in HORZ/VERT mode - follow with 0x00 + 0x07 = PAGE7
+#define OLED_CMD_SET_PAGE_START			0xB0	; can be used only in PAGE mode - add 0-7 for page
+#define OLED_CMD_SET_COL_START_LOW		0x00	; can be used only in PAGE mode - add low 4 bits 
+#define OLED_CMD_SET_COL_START_HIGH		0x10	; can be used only in PAGE mode - add low 4 bits
 
 ; Hardware Config (pg.31)
-#define OLED_CMD_SET_DISPLAY_START_LINE	0x40
+#define OLED_CMD_SET_DISPLAY_START_LINE		0x40
 #define OLED_CMD_SET_SEGMENT_REMAP		0xA1	
 #define OLED_CMD_SET_MUX_RATIO			0xA8	; follow with 0x3F = 64 MUX
 #define OLED_CMD_SET_COM_SCAN_MODE		0xC8	
@@ -38,38 +41,60 @@
 ; NOP
 #define OLED_CMD_NOP 				0xE3
 
-    
-oledLoadFont
-    ;load font data
+oledDrawChar
+    movwf oledChar, access
+    rcall i2cStart
+    movlw OLED_CONTROL_BYTE_DATA_STREAM
+    rcall i2cWrite
+    clrf oledSegment, access
+oledDrawCharLoop
+   ;load font data
     clrf TBLPTRU, access
     movlw high(font3x5)
     movwf TBLPTRH, access
-    movlw font3x5 - .32
-    addwf oledChar, w, access
+    movlw .32
+    subwf oledChar, w, access
+    rlncf WREG, access
+    addlw font3x5
     movwf TBLPTRL, access
+    tblrd*+
     movff TABLAT, oledFontData
-    incf TBLPTRL, f
+    tblrd*
     movff TABLAT, oledFontData+1
+    ; shift font bits to get segment
+;    clrf WREG
+;    btfsc oledSegment, 0, access
+;    addlw .5
+;    btfsc oledSegment, 1, access
+;    addlw .10
+    ;next 3 should do the same as above 5
+    movlw .5
+    mulwf oledSegment
+    movf PRODL, w
+    bz oledFontShiftDone ;TODO if we store the magic bit in the lowest bit, we could skip this check
+oledFontShiftLoop
+    bcf STATUS, C
+    rrcf oledFontData+1, f, access
+    rrcf oledFontData, f, access
+    decfsz WREG, f, access
+    bra oledFontShiftLoop
+oledFontShiftDone
+    movlw 0x1f
+    andwf oledFontData, f, access
+    ; support subscript bit
+    bcf STATUS, C
+;    btfsc TABLAT, 7, access
+;    rlcf oledFontData, f, access
+    ;load into w and shift to center
+    rlcf oledFontData, w, access
+    rcall i2cWrite    
     
-
-;assume oledChars has been loaded with the characters to draw
-oledFontSegment
-    clrf oledOutPixels, access
-    ;find this character
+    incf oledSegment, f, access
+    btfss oledSegment, 2, access
+    bra oledDrawCharLoop
+    rcall i2cStop
+    return    
     
-    
-
-    
-    
-    
-    
-oledIsr
- 
-    btfss PIR1, SSPIF, access
-
-    
-    return
-
 i2cWait
     btfss PIR1, SSPIF, access
     bra i2cWait
@@ -108,12 +133,12 @@ oledWriteSequenceLoop
     return
 
 oledInit macro
-    clrf oledState, access
+    bcf SSP1CON1, SSPEN, access	    ; enable mssp
     bsf SSP1CON1, SSPM3, access	    ; i2c master mode
     movlw 0x1d			    ; 400khz @ 48mhz
     movwf SSP1ADD, access
     bcf PIR1, SSPIF, access
-    bsf SSP1CON1, SSPEN, access	    ; i2c master mode
+    bsf SSP1CON1, SSPEN, access	    ; enable mssp
     
     ;TODO set up interrupts PIE1, SSPIE
     clrf TBLPTRU, access
@@ -121,40 +146,78 @@ oledInit macro
     movwf TBLPTRH, access
     movlw low(oledInitSequence)
     movwf TBLPTRL, access
-    movlw .26
+    movlw .9
     rcall oledWriteSequence
     endm
+
     
-oledPrepDraw
-    movlw high(oledDrawSequence)
-    movwf TBLPTRH, access
-    movlw low(oledDrawSequence)
-    movwf TBLPTRL, access
-    movlw .7
-    rcall oledWriteSequence
+oledNewLine
+    rcall i2cStart
+    movlw OLED_CONTROL_BYTE_CMD_STREAM
+    rcall i2cWrite
+    incf oledRow, w, access
+    andlw 0x07
+    movwf oledRow, access
+    iorlw OLED_CMD_SET_PAGE_START
+    rcall i2cWrite
+    movlw OLED_CMD_SET_COL_START_LOW
+    rcall i2cWrite
+    movlw OLED_CMD_SET_COL_START_HIGH
+    rcall i2cWrite
+    movf oledRow, w
+    addlw .1
+    mullw .8
+    movf PRODL, w, access
+    andlw 0x3f
+    addlw OLED_CMD_SET_DISPLAY_START_LINE
+    rcall i2cWrite
+    rcall i2cStop
+    movlw .32
+    movwf oledWriteCount
+oledBlankLineLoop
+    movlw ' '
+    rcall oledDrawChar
+    decfsz oledWriteCount, f
+    bra oledBlankLineLoop
     return
     
-oledDrawSequence ; 7 bytes
-    db OLED_CONTROL_BYTE_CMD_STREAM, OLED_CMD_SET_COLUMN_RANGE
-    db 0x00, 0x7F
-    db OLED_CMD_SET_PAGE_RANGE, 0
-    db 0x07
+;oledPrepDraw
+;    movlw high(oledDrawSequence)
+;    movwf TBLPTRH, access
+;    movlw low(oledDrawSequence)
+;    movwf TBLPTRL, access
+;    movlw .7
+;    rcall oledWriteSequence
+;    return
+    
+;oledDrawSequence ; 7 bytes
+;    db OLED_CONTROL_BYTE_CMD_STREAM, OLED_CMD_SET_COLUMN_RANGE
+;    db 0x00, 0x7F
+;    db OLED_CMD_SET_PAGE_RANGE, 0
+;    db 0x07
 
-oledInitSequence ; 26 bytes
+oledInitSequence ; 10 bytes
 
     db OLED_CONTROL_BYTE_CMD_STREAM, OLED_CMD_DISPLAY_OFF
-    db OLED_CMD_SET_MUX_RATIO, 0x3F ; DELETE ME, default is 63 (0x3f)
-    db OLED_CMD_SET_DISPLAY_OFFSET, 0x00 ; DELETE ME, default is 0
-    db OLED_CMD_SET_DISPLAY_START_LINE, OLED_CMD_SET_SEGMENT_REMAP ; DELETE ME start line is default, seg remap needs to stay
-    db OLED_CMD_SET_COM_SCAN_MODE, OLED_CMD_SET_COM_PIN_MAP ; delete pin map (defaults) and 0x12
-    db 0x12, OLED_CMD_SET_CONTRAST ; delete contrast and 7f ,defaults
-    db 0x7F, OLED_CMD_DISPLAY_RAM ; delete display ram, its default
-    db OLED_CMD_DISPLAY_NORMAL, OLED_CMD_SET_DISPLAY_CLK_DIV; delete normal, its default, delete clock div and 0x80, its default
-    db 0x80, OLED_CMD_SET_CHARGE_PUMP
-    db 0x14, OLED_CMD_SET_PRECHARGE ; delete precharge and 0x22, defaults
-    db 0x22, OLED_CMD_SET_VCOMH_DESELCT ;TODO try with out chaning this to 0x30 (.83 x vcc) default is 0x77 vcc
-    db 0x30, OLED_CMD_SET_MEMORY_ADDR_MODE ;TODO could use page mode, write setup is simplier too
-    db 0x00, OLED_CMD_DISPLAY_ON
+    db OLED_CMD_SET_SEGMENT_REMAP, OLED_CMD_SET_COM_SCAN_MODE
+    db OLED_CMD_SET_CHARGE_PUMP, 0x14, 
+    db OLED_CMD_SET_VCOMH_DESELCT, 0x30
+    db OLED_CMD_DISPLAY_ON, OLED_CMD_DISPLAY_ON
+    
+;26 bytes
+;    db OLED_CONTROL_BYTE_CMD_STREAM, OLED_CMD_DISPLAY_OFF
+;    db OLED_CMD_SET_MUX_RATIO, 0x3F ; DELETE ME, default is 63 (0x3f)
+;    db OLED_CMD_SET_DISPLAY_OFFSET, 0x00 ; DELETE ME, default is 0
+;    db OLED_CMD_SET_DISPLAY_START_LINE, OLED_CMD_SET_SEGMENT_REMAP ; DELETE ME start line is default, seg remap needs to stay
+;    db OLED_CMD_SET_COM_SCAN_MODE, OLED_CMD_SET_COM_PIN_MAP ; delete pin map (defaults) and 0x12
+;    db 0x12, OLED_CMD_SET_CONTRAST ; delete contrast and 7f ,defaults
+;    db 0x7F, OLED_CMD_DISPLAY_RAM ; delete display ram, its default
+;    db OLED_CMD_DISPLAY_NORMAL, OLED_CMD_SET_DISPLAY_CLK_DIV; delete normal, its default, delete clock div and 0x80, its default
+;    db 0x80, OLED_CMD_SET_CHARGE_PUMP
+;    db 0x14, OLED_CMD_SET_PRECHARGE ; delete precharge and 0x22, defaults
+;    db 0x22, OLED_CMD_SET_VCOMH_DESELCT ;TODO try with out chaning this to 0x30 (.83 x vcc) default is 0x77 vcc
+;    db 0x30, OLED_CMD_SET_MEMORY_ADDR_MODE ;TODO could use page mode, write setup is simplier too
+;    db 0x00, OLED_CMD_DISPLAY_ON
 ;    
 ;    ; Tell the SSD1306 that a command stream is incoming
 ;    db OLED_CONTROL_BYTE_CMD_STREAM

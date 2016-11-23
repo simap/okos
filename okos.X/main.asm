@@ -38,8 +38,6 @@
 access	equ	0
 banked	equ	1
 	
-#define MyFlag flags,0,access
-
 ; TODO PLACE VARIABLE DEFINITIONS GO HERE
 
 #include <memory.asm>
@@ -95,19 +93,17 @@ HIGHISR       CODE    0x0008
 
 LOWISR       CODE    0x0018
 isr:
-    movwf W_TEMP, access
-    movff STATUS, STATUS_TEMP
-    movff BSR, BSR_TEMP
-    movff TBLPTRL, TBLPTR_TEMP+0
-    movff TBLPTRH, TBLPTR_TEMP+1
-
-    rcall oledIsr
-    
-    movff TBLPTR_TEMP+0, TBLPTRL
-    movff TBLPTR_TEMP+1, TBLPTRH
-    movff BSR_TEMP, BSR
-    movf W_TEMP, W, access
-    movff STATUS_TEMP, STATUS
+;    movwf W_TEMP, access
+;    movff STATUS, STATUS_TEMP
+;    movff BSR, BSR_TEMP
+;    movff TBLPTRL, TBLPTR_TEMP+0
+;    movff TBLPTRH, TBLPTR_TEMP+1
+;    
+;    movff TBLPTR_TEMP+0, TBLPTRL
+;    movff TBLPTR_TEMP+1, TBLPTRH
+;    movff BSR_TEMP, BSR
+;    movf W_TEMP, W, access
+;    movff STATUS_TEMP, STATUS
     RETFIE
 
 ;----------------------------------PIC18's--------------------------------------
@@ -137,45 +133,91 @@ isr:
 ;*******************************************************************************    
     
 
-FONT_TABLE CODE 
+FONT_TABLE CODE 0x1a
      #include <font.asm>
     
 MAIN_PROG CODE                      ; let linker place main program
- 
+    #include <tables.asm>
      #include <oled.asm>
 
  
 START
     bcf T0CON, T0CS, access
     bsf OSCCON, IRCF2, access
- 
+
+    movlw .1
+    rcall delay
+    
     oledInit
     
+    clrf mainTemp
+    rcall oledNewLine
+    rcall oledNewLine
+    rcall oledNewLine
+    rcall oledNewLine
+    rcall oledNewLine
+    rcall oledNewLine
+    rcall oledNewLine
+    rcall oledNewLine
+
     
 mainloop:
-    rcall oledPrepDraw
-    clrf oledWriteCount, access
-    rcall i2cStart
-    movlw OLED_CONTROL_BYTE_DATA_STREAM
-    rcall i2cWrite
-drawLoop:
-    movf TMR0, w, access
-;    movlw 0x00
-    rcall i2cWrite
-    movf TMR0, w, access
-    rcall i2cWrite
-    movf TMR0, w, access
-    rcall i2cWrite
-    movf TMR0, w, access
-    rcall i2cWrite
-    decfsz oledWriteCount, f, access
-    bra drawLoop
-    rcall i2cStop
+    
+    
+    rcall oledNewLine
+    movlw '0'
+    addwf mainTemp, w
+    rcall oledDrawChar
+    rcall drawHello
+    
+    incf mainTemp, f
+    movlw .10
+
+    cpfslt mainTemp
+    rcall oledNewLine
+
+    cpfslt mainTemp
+    clrf mainTemp
+    
+    movlw .32
+    rcall delay
+    
     bra mainloop
     
+    
+drawHello:
+    movlw 'H'
+    rcall oledDrawChar
+    movlw 'e'
+    rcall oledDrawChar
+    movlw 'l'
+    rcall oledDrawChar
+    movlw 'l'
+    rcall oledDrawChar
+    movlw 'o'
+    rcall oledDrawChar
+    movlw '!'
+    rcall oledDrawChar
+    
+    movf TMR0, w, access
+    addlw .33
+    andlw 0x7f
+    decf WREG, f
+    rcall oledDrawChar
+    return
 
-;    movlw oledInitSequence
-        
-
+    
+delay
+    movwf oledWriteCount
+    clrf oledChar
+    clrf oledSegment
+delayLoop
+    decfsz oledSegment, f
+    bra delayLoop
+    decfsz oledChar, f
+    bra delayLoop
+    decfsz oledWriteCount, f
+    bra delayLoop
+    return
     end
     
