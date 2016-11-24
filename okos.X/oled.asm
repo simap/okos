@@ -41,6 +41,8 @@
 ; NOP
 #define OLED_CMD_NOP 				0xE3
 
+#define SUPPORT_DESCENDER_FONT 1
+    
     ;take ascii char in WREG, get 3x5 pixels from font table, unpack and send to display
 oledDrawChar
    ;load font data
@@ -55,6 +57,13 @@ oledDrawChar
     movff TABLAT, oledFontData
     tblrd* ; keep high byte in TABLAT
     
+#if SUPPORT_DESCENDER_FONT
+    ; save decender bit
+    bcf oledDescender
+    btfsc TABLAT, 7
+    bsf oledDescender
+#endif
+    
     rcall i2cStart
     movlw OLED_CONTROL_BYTE_DATA_STREAM
     rcall i2cWrite
@@ -62,9 +71,16 @@ oledDrawChar
 oledDrawCharLoop
     ;write low 5 bits, one segment of font pixels
     movlw 0x1f
+        
     andwf oledFontData, w, access
-;    shift to center on line
+    ;shift to center on line
     rlncf WREG
+#if SUPPORT_DESCENDER_FONT
+    btfsc oledDescender
+    rlncf WREG
+#endif
+
+    
     rcall i2cWrite    
     
     ;shift everything 5 bits to the right to get the next col of font pixels
@@ -185,7 +201,7 @@ oledInitSequence ; 10 bytes
 
     db OLED_CONTROL_BYTE_CMD_STREAM, OLED_CMD_DISPLAY_OFF
     db OLED_CMD_SET_SEGMENT_REMAP, OLED_CMD_SET_COM_SCAN_MODE
-    db OLED_CMD_SET_CHARGE_PUMP, 0x14, 
+    db OLED_CMD_SET_CHARGE_PUMP, 0x14
     db OLED_CMD_SET_VCOMH_DESELCT, 0x30
     db OLED_CMD_DISPLAY_ON, OLED_CMD_DISPLAY_ON
     
