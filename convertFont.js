@@ -91,7 +91,7 @@ function printFontTable() {
       var lower = ( "00" + (pixel & 0xff).toString(16)).substr(-2);
 
       var hex = ("0000" + getChar(i).toString(16)).substr(-4);
-      console.log("db\t0x" + lower + ",0x" + upper + "\t;" + i + " '" + String.fromCodePoint(i) + "'");
+      console.log("\tdb\t0x" + lower + ",0x" + upper + "\t;" + i + " '" + String.fromCodePoint(i) + "'");
    }
 }
 printFontTable();
