@@ -41,59 +41,45 @@
 ; NOP
 #define OLED_CMD_NOP 				0xE3
 
+    ;take ascii char in WREG, get 3x5 pixels from font table, unpack and send to display
 oledDrawChar
-    movwf oledChar, access
+   ;load font data
+    addlw .224 ;subtract 32 TODO non-ascii charset could avoid this
+    rlncf WREG
+    addlw font3x5
+    movwf TBLPTRL, access
+;    clrf TBLPTRU, access ; no need
+    movlw high(font3x5)
+    movwf TBLPTRH, access
+    tblrd*+
+    movff TABLAT, oledFontData
+    tblrd* ; keep high byte in TABLAT
+    
     rcall i2cStart
     movlw OLED_CONTROL_BYTE_DATA_STREAM
     rcall i2cWrite
     clrf oledSegment, access
 oledDrawCharLoop
-   ;load font data
-    clrf TBLPTRU, access
-    movlw high(font3x5)
-    movwf TBLPTRH, access
-    movlw .32
-    subwf oledChar, w, access
-    rlncf WREG, access
-    addlw font3x5
-    movwf TBLPTRL, access
-    tblrd*+
-    movff TABLAT, oledFontData
-    tblrd*
-    movff TABLAT, oledFontData+1
-    ; shift font bits to get segment
-;    clrf WREG
-;    btfsc oledSegment, 0, access
-;    addlw .5
-;    btfsc oledSegment, 1, access
-;    addlw .10
-    ;next 3 should do the same as above 5
+    ;write low 5 bits, one segment of font pixels
+    movlw 0x1f
+    andwf oledFontData, w, access
+;    shift to center on line
+    rlncf WREG
+    rcall i2cWrite    
+    
+    ;shift everything 5 bits to the right to get the next col of font pixels
     movlw .5
-    mulwf oledSegment
-    movf PRODL, w
-    bz oledFontShiftDone ;TODO if we store the magic bit in the lowest bit, we could skip this check
 oledFontShiftLoop
-    bcf STATUS, C
-    rrcf oledFontData+1, f, access
+    bcf STATUS, C ; avoid shifting garbage into high bits so that on the 4th segment is empty
+    rrcf TABLAT, f, access
     rrcf oledFontData, f, access
     decfsz WREG, f, access
     bra oledFontShiftLoop
-oledFontShiftDone
-    movlw 0x1f
-    andwf oledFontData, f, access
-    ; support subscript bit
-    bcf STATUS, C
-;    btfsc TABLAT, 7, access
-;    rlcf oledFontData, f, access
-    ;load into w and shift to center
-    rlcf oledFontData, w, access
-    rcall i2cWrite    
-    
     incf oledSegment, f, access
     btfss oledSegment, 2, access
     bra oledDrawCharLoop
     rcall i2cStop
-    return    
+    return
     
 i2cWait
     btfss PIR1, SSPIF, access
@@ -133,15 +119,14 @@ oledWriteSequenceLoop
     return
 
 oledInit macro
-    bcf SSP1CON1, SSPEN, access	    ; enable mssp
+;    bcf SSP1CON1, SSPEN, access	    ; disable mssp
     bsf SSP1CON1, SSPM3, access	    ; i2c master mode
     movlw 0x1d			    ; 400khz @ 48mhz
     movwf SSP1ADD, access
-    bcf PIR1, SSPIF, access
+;    bcf PIR1, SSPIF, access
     bsf SSP1CON1, SSPEN, access	    ; enable mssp
     
-    ;TODO set up interrupts PIE1, SSPIE
-    clrf TBLPTRU, access
+;    clrf TBLPTRU, access
     movlw high(oledInitSequence)
     movwf TBLPTRH, access
     movlw low(oledInitSequence)
@@ -150,7 +135,7 @@ oledInit macro
     rcall oledWriteSequence
     endm
 
-    
+; increment oled row, reset column pos, set start line to simulate infinite scroll, and clear the new line
 oledNewLine
     rcall i2cStart
     movlw OLED_CONTROL_BYTE_CMD_STREAM
