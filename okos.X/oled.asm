@@ -40,8 +40,6 @@
 
 ; NOP
 #define OLED_CMD_NOP 				0xE3
-
-#define SUPPORT_DESCENDER_FONT 1
     
     ;take ascii char in WREG, get 3x5 pixels from font table, unpack and send to display
 oledDrawChar
@@ -56,13 +54,10 @@ oledDrawChar
     tblrd*+
     movff TABLAT, oledFontData
     tblrd* ; keep high byte in TABLAT
+    movff TABLAT, oledFontData+1
     
-#if SUPPORT_DESCENDER_FONT
-    ; save decender bit
-    bcf oledDescender
-    btfsc TABLAT, 7
-    bsf oledDescender
-#endif
+    ;remove descender bit from display (would show on 4th segment)
+    bcf oledFontData+1, 7
     
     rcall i2cStart
     movlw OLED_CONTROL_BYTE_DATA_STREAM
@@ -75,19 +70,17 @@ oledDrawCharLoop
     andwf oledFontData, w, access
     ;shift to center on line
     rlncf WREG
-#if SUPPORT_DESCENDER_FONT
-    btfsc oledDescender
-    rlncf WREG
-#endif
 
-    
-    rcall i2cWrite    
+    ;check for descender bit (tablat still has untouched high byte of font data)
+    btfsc TABLAT, 7
+    rlncf WREG
+    rcall i2cWrite
     
     ;shift everything 5 bits to the right to get the next col of font pixels
     movlw .5
 oledFontShiftLoop
     bcf STATUS, C ; avoid shifting garbage into high bits so that on the 4th segment is empty
-    rrcf TABLAT, f, access
+    rrcf oledFontData+1, f, access
     rrcf oledFontData, f, access
     decfsz WREG, f, access
     bra oledFontShiftLoop
@@ -98,9 +91,9 @@ oledFontShiftLoop
     return
     
 i2cWait
-    btfss PIR1, SSPIF, access
-    bra i2cWait
-    bcf PIR1, SSPIF, access
+;    btfss PIR1, SSPIF, access
+;    bra i2cWait
+;    bcf PIR1, SSPIF, access
     return
     
 i2cStart

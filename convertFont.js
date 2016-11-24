@@ -34,6 +34,14 @@ var tom_thumb_new_bits = [
    0x41, 0x31, 0x66, 0x72, 0x45, 0x67, 0x32, 0x70, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00 ];
 
+var descenders = [
+   44,  // ','
+   103, // 'g'
+   106, // 'j'
+   112, // 'p'
+   113, // 'q'
+   121, // 'y'
+];
 
 function getPixel(x,y) {
    var i = Math.floor(x / 8) + y * 16;
@@ -77,6 +85,10 @@ function getChar(c) {
 
          pixels |= getPixel(dx, dy)<<b++;
       }
+   }
+
+   if (descenders.indexOf(c) !== -1) {
+      pixels |= 0x8000;
    }
 
    // console.log(c, "" + pixels.toString(16));
