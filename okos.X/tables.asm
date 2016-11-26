@@ -16,3 +16,25 @@
 ;    bra readLoop
 ;    ; done!
     
+;tableLoad ;24 bytes
+;    addlw table_index
+;    movwf TBLPTRL
+;    clrf TBLPTRH
+;    tblrd*+
+;    movff TABLAT, tableTemp
+;    tblrd*
+;    movff TABLAT, TBLPTRH
+;    movff tableTemp, TBLPTRL
+;    return
+    
+;    ;support tableOffset
+;    movf tableOffset, w
+;    addwf TBLPTRL
+;    btfsc STATUS, C
+;    incf TBLPTRH, f
+;    clrf tableOffset
+;    
+;    ;read byte counter
+;    tblrd*+
+;    movff TABLAT, tableCounter
+    

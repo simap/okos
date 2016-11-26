@@ -10,7 +10,7 @@ MVP
 * keyboard driver (ps2?) and api
 	* isr for keyboard clock pin
 	* scan code map/table
-	* handle keyup at minimum, fifo buffer
+	* handle keyup or keydown at minimum, fifo buffer
 * display driver and api
 	* probably need a minimal font - remember Apple ][ uppercase only font (but perhaps lowercase)
 	* Use 3x5 tiny font
@@ -52,7 +52,28 @@ pic18f25k50
 * has 32k of flash, leaving 31k for filesystem
 * has 1k eeprom, could be used for fs metadata given better write durability
 
-### USB
+### Assembler
 
-maybe without a display, a usb virtual com port could be done
+movf
+movwf
+
+addwf
+
+andwf
+iorwf
+xorwf
+
+rlcf
+rrcf
+
+movlw
+
+bcf
+bsf
+btfsc
+btfss
+
+goto
+call
+return
 

@@ -42,6 +42,8 @@ banked	equ	1
 
 #include <memory.asm>
 
+#include <bensmacros.asm>
+
 
 
 ;*******************************************************************************
@@ -49,40 +51,18 @@ banked	equ	1
 ;*******************************************************************************
 
 RES_VECT  CODE    0x0000            ; processor reset vector
+resetvector:
     bra    START                   ; go to beginning of program
 
     ;TODO hide data here, or add a few init instructions above
     db 0x11, 0x11
     db 0x11, 0x11
     db 0x11, 0x11
-;*******************************************************************************
-; TODO Step #4 - Interrupt Service Routines
-;
-; There are a few different ways to structure interrupt routines in the 8
-; bit device families.  On PIC18's the high priority and low priority
-; interrupts are located at 0x0008 and 0x0018, respectively.  On PIC16's and
-; lower the interrupt is at 0x0004.  Between device families there is subtle
-; variation in the both the hardware supporting the ISR (for restoring
-; interrupt context) as well as the software used to restore the context
-; (without corrupting the STATUS bits).
-;
-; General formats are shown below in relocatible format.
-;
-;------------------------------PIC16's and below--------------------------------
-;
-; ISR       CODE    0x0008           ; interrupt vector location
-;
-;     <Search the device datasheet for 'context' and copy interrupt
-;     context saving code here.  Older devices need context saving code,
-;     but newer devices like the 16F#### don't need context saving code.>
-;
-;     RETFIE
-;
     
 HIGHISR       CODE    0x0008
-    ;TODO maybe handle keyboard, timers?
-    RETFIE
+highisr:
     ;TODO maybe hide some data here    
+    db 0x11, 0x11
     db 0x11, 0x11
     db 0x11, 0x11
     db 0x11, 0x11
@@ -93,18 +73,37 @@ HIGHISR       CODE    0x0008
 
 LOWISR       CODE    0x0018
 isr:
-;    movwf W_TEMP, access
-;    movff STATUS, STATUS_TEMP
-;    movff BSR, BSR_TEMP
+    ;TODO handle timers?
+    ; TODO use 8 byte keyboard buffer, and single byte for head,tail so that it can be updated atomically. (increment nibble, clear bits 7 and 3)
+    ;TODO check for running program, call its ISR offset
+    
+    ; handle keyboard clock IOC
+;keyboardIsr:
+;    btfss INTCON, IOCIF
+;    bra notKeyboard
+;    btfsc PORTB, 4
+;    bra endKeyboardIsr
+;    
+;    ;check for timeout
+;    ;load tmr0h by reading tmr0l
+;    movf TMR0L, w
+;    movf keyboardBitTimer, w
+;    subwf TMR0H, w
+;    ;sublw 2 ???
+;endKeyboardIsr:
+;    bcf INTCON, IOCIF
+;notKeyboard:
+;    movff FSR0L, fsr0_temp
+;    movff FSR0H, fsr0_temp+1
 ;    movff TBLPTRL, TBLPTR_TEMP+0
 ;    movff TBLPTRH, TBLPTR_TEMP+1
 ;    
 ;    movff TBLPTR_TEMP+0, TBLPTRL
 ;    movff TBLPTR_TEMP+1, TBLPTRH
-;    movff BSR_TEMP, BSR
-;    movf W_TEMP, W, access
-;    movff STATUS_TEMP, STATUS
-    RETFIE
+    
+;    movff fsr0_temp, FSR0L
+;    movff fsr0_temp+1, FSR0H
+    RETFIE FAST ; restores STATUS, WREG, BSR. only usable if high priority interrupts are not enabled
 
 ;----------------------------------PIC18's--------------------------------------
 ;
@@ -134,90 +133,26 @@ isr:
     
 
 FONT_TABLE CODE 0x1a
+;FONT_TABLE CODE
      #include <font.asm>
     
 MAIN_PROG CODE                      ; let linker place main program
     #include <tables.asm>
-     #include <oled.asm>
+    #include <oled.asm>
+    #include <keyboard.asm>
 
- 
 START
-    bcf T0CON, T0CS, access
-    bsf OSCCON, IRCF2, access
-
-    movlw .1
-    rcall delay
+    ;set up tmr0 as 16 bit w/ 256 prescaler. overflows every 1.4s. tmr0H can be used for 1/183rds
+    ; TMR0ON = 1 | T08BIT = 0 | T0CS = 0 | T0SE = x | PSA = 0 (enabled) | T0PS = 111 (1:256)
+    movlw b'10000111'
+    movwf T0CON
+    bsf OSCCON, IRCF2, access ; set for 16Mhz x3 = 48mhz
     
+    keyboardInit
     oledInit
     
-    clrf mainTemp
-    rcall oledNewLine
-    rcall oledNewLine
-    rcall oledNewLine
-    rcall oledNewLine
-    rcall oledNewLine
-    rcall oledNewLine
-    rcall oledNewLine
-    rcall oledNewLine
+    goto $
 
-    
-mainloop:
-    
-    
-    rcall oledNewLine
-    movlw '0'
-    addwf mainTemp, w
-    rcall oledDrawChar
-    rcall drawHello
-    
-    incf mainTemp, f
-    movlw .10
-
-    cpfslt mainTemp
-    rcall oledNewLine
-
-    cpfslt mainTemp
-    clrf mainTemp
-    
-    movlw .32
-    rcall delay
-    
-    bra mainloop
-    
-    
-drawHello:
-    movlw 'H'
-    rcall oledDrawChar
-    movlw 'e'
-    rcall oledDrawChar
-    movlw 'l'
-    rcall oledDrawChar
-    movlw 'l'
-    rcall oledDrawChar
-    movlw 'o'
-    rcall oledDrawChar
-    movlw '!'
-    rcall oledDrawChar
-    
-    movf TMR0, w, access
-    addlw .33
-    andlw 0x7f
-    decf WREG, f
-    rcall oledDrawChar
-    return
-
-    
-delay
-    movwf oledWriteCount
-    clrf oledChar
-    clrf oledSegment
-delayLoop
-    decfsz oledSegment, f
-    bra delayLoop
-    decfsz oledChar, f
-    bra delayLoop
-    decfsz oledWriteCount, f
-    bra delayLoop
-    return
+endofmain
     end
     
