@@ -74,6 +74,10 @@ oledDrawCharLoop
     ;check for descender bit (tablat still has untouched high byte of font data)
     btfsc TABLAT, 7
     rlncf WREG
+    
+    btfsc oledDrawCursor
+    bsf WREG, 7
+    
     rcall i2cWrite
     
     ;shift everything 5 bits to the right to get the next col of font pixels
@@ -88,6 +92,8 @@ oledFontShiftLoop
     btfss oledSegment, 2, access
     bra oledDrawCharLoop
     rcall i2cStop
+    incf oledCol, f
+    bcf oledCol, 5 ; keep it 0-31
     return
     
 i2cWait
@@ -168,6 +174,7 @@ oledNewLine
     rcall i2cStop
     movlw .32
     movwf oledWriteCount
+    clrf oledCol
 oledBlankLineLoop
     movlw ' '
     rcall oledDrawChar
