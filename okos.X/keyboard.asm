@@ -25,7 +25,7 @@ readKey:
     ;if its anything higher than a0, ignore the sequence
     movlw 0xa0
     subwf keyboardCode, w
-    btfss STATUS, C
+    btfsc STATUS, C
     bsf keyboardIgnore
     
 ;    btfsc keyboardIgnore
@@ -116,4 +116,4 @@ keyCodeTable:
     db	20,29	;SPACE
     db	1b,76	;ESC
     db	9,0D	;TAB
-    db	00,00	;not found
+    db	00,00	;not found, end of table
