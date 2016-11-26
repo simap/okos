@@ -55,7 +55,11 @@ keyParseDone:
     ; if this was a leading code, wait for the next key
     btfsc keyboardIgnore
     rcall readKey ;this can recurse twice for extended break codes
-    bcf keyboardIgnore  
+    bcf keyboardIgnore
+    
+    ; hold ps2 clock line until we are ready to read more codes
+    bsf TRISB, 4
+    
     return
     
 readBit:
