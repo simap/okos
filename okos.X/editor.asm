@@ -14,7 +14,7 @@ editorClearMemoryLoop
     movwf POSTINC0
     btfss FSR0H, 3 ; outside of implemented memory range
     bra editorClearMemoryLoop
-    LFSR 0, buffer
+    rcall resetBufferFsr
     
 editorCommandMode:
     ;redraw display
@@ -30,6 +30,7 @@ editorDisplayLoop:
     addwf oledCol, w ; and the 0th column
     btfsc STATUS, Z
     bsf oledDrawCursor
+    
     
     movf POSTINC1, w
     rcall oledDrawChar
