@@ -48,6 +48,9 @@ oledDrawChar
     xorlw '\n'
     bnz oledNewLine
     xorlw '\n' ; wasn't newline, repair bits
+    
+    ;TODO support tab?
+    
    ;load font data
     addlw .224 ;subtract 32 TODO non-ascii charset could avoid this
     rlncf WREG

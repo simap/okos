@@ -119,5 +119,5 @@ keyCodeTable:
     db	8,66	;BKSP
     db	20,29	;SPACE
     db	1b,76	;ESC
-    db	9,0D	;TAB
+;    db	9,0D	;TAB
     db	00,00	;not found, end of table
