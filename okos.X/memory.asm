@@ -1,36 +1,34 @@
     udata
+line		res 32
+buffer		res 1
 
-		
-    access_ovr
+    udata_acs
+    
 flags		res 1; flag bit register
-;fsr0_temp	res 2; for isr
-;W_TEMP		res 1    
-;STATUS_TEMP	res 1
-;BSR_TEMP	res 1
-;TBLPTR_TEMP	res 2
-;
-;mainTemp	res 1 
-		
+tableSearch	res 1
+tableRes	res 1
 keyboardCode	res 1
 keyboardAscii	res 1
 
 oledWriteCount	res 1
-;oledState	res 1
-;oledCharX	res 1
-;oledCharY	res 1
 oledRow		res 1
 oledCol		res 1
 oledSegment	res 1
-;oledCol		res 1
-;oledChar	res 1
 oledFontData	res 2
-;oledOutPixels	res 1
-;oledTemp	res 1
-	
-;tableOffset	res 1
-;tableCounter	res 1
-;tableTemp	res 1
 
-#define tableGoDone flags,0,access
+	
+editorTemp	res 1
+	
+cursorX		res 1
+cursorY		res 1
+
+parsedWord1	res 1
+parsedWord2	res 2
+parsedWord3	res 1
+	
+stringsTemp	res 1
+
+#define BUFFER_MAX_ADDR (buffer+1900)
+
 #define keyboardIgnore flags,1,access
 #define oledDrawCursor flags,2,access

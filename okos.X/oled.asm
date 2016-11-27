@@ -42,7 +42,12 @@
 #define OLED_CMD_NOP 				0xE3
     
     ;take ascii char in WREG, get 3x5 pixels from font table, unpack and send to display
+    ;if WREG == '\n', calls oledNewLine instead
 oledDrawChar
+    ;check for newline
+    xorlw '\n'
+    bnz oledNewLine
+    xorlw '\n' ; wasn't newline, repair bits
    ;load font data
     addlw .224 ;subtract 32 TODO non-ascii charset could avoid this
     rlncf WREG
@@ -66,20 +71,15 @@ oledDrawChar
 oledDrawCharLoop
     ;write low 5 bits, one segment of font pixels
     movlw 0x1f
-        
     andwf oledFontData, w, access
     ;shift to center on line
     rlncf WREG
-
     ;check for descender bit (tablat still has untouched high byte of font data)
     btfsc TABLAT, 7
     rlncf WREG
-    
     btfsc oledDrawCursor
     bsf WREG, 7
-    
     rcall i2cWrite
-    
     ;shift everything 5 bits to the right to get the next col of font pixels
     movlw .5
 oledFontShiftLoop
@@ -90,16 +90,16 @@ oledFontShiftLoop
     bra oledFontShiftLoop
     incf oledSegment, f, access
     btfss oledSegment, 2, access
-    bra oledDrawCharLoop
+    bra oledDrawCharLoop ;more segments to draw
     rcall i2cStop
     incf oledCol, f
     bcf oledCol, 5 ; keep it 0-31
     return
     
 i2cWait
-;    btfss PIR1, SSPIF, access
-;    bra i2cWait
-;    bcf PIR1, SSPIF, access
+    btfss PIR1, SSPIF, access
+    bra i2cWait
+    bcf PIR1, SSPIF, access
     return
     
 i2cStart

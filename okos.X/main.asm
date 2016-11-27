@@ -135,11 +135,17 @@ isr:
 FONT_TABLE CODE 0x1a
 ;FONT_TABLE CODE
      #include <font.asm>
-    
+
+;TABLE_INDEX CODE
+;table_index:
+;    db 0,0
+ 
 MAIN_PROG CODE                      ; let linker place main program
-    #include <tables.asm>
+;    #include <tables.asm>
     #include <oled.asm>
     #include <keyboard.asm>
+    #include <strings.asm>
+    #include <editor.asm>
 
 START
     ;set up tmr0 as 16 bit w/ 256 prescaler. overflows every 1.4s. tmr0H can be used for 1/183rds
@@ -147,10 +153,14 @@ START
     movlw b'10000111'
     movwf T0CON
     bsf OSCCON, IRCF2, access ; set for 16Mhz x3 = 48mhz
+
+    
+    
+;    LFSR 0, line
     
     keyboardInit
     oledInit
-    
+        
     goto $
 
 endofmain

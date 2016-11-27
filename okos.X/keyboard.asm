@@ -59,7 +59,7 @@ keyParseDone:
     
     ; hold ps2 clock line until we are ready to read more codes
     bsf TRISB, 4
-    
+    movf keyboardAscii, w
     return
     
 readBit:
