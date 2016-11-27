@@ -52,16 +52,16 @@ banked	equ	1
 
 RES_VECT  CODE    0x0000            ; processor reset vector
 resetvector:
+    ;set up tmr0 as 16 bit w/ 256 prescaler. overflows every 1.4s. tmr0H can be used for 1/183rds
+    ; TMR0ON = 1 | T08BIT = 0 | T0CS = 0 | T0SE = x | PSA = 0 (enabled) | T0PS = 111 (1:256)
+    movlw b'10000111'
+    movwf T0CON
+    bsf OSCCON, IRCF2, access ; set for 16Mhz x3 = 48mhz
     bra    START                   ; go to beginning of program
-
-    ;TODO hide data here, or add a few init instructions above
-    db 0x11, 0x11
-    db 0x11, 0x11
-    db 0x11, 0x11
     
 HIGHISR       CODE    0x0008
 highisr:
-    ;TODO maybe hide some data here    
+    ;TODO maybe hide some data here, perhaps the 16 opcodes
     db 0x11, 0x11
     db 0x11, 0x11
     db 0x11, 0x11
@@ -73,9 +73,11 @@ highisr:
 
 LOWISR       CODE    0x0018
 isr:
+    ;TODO check for running program, call its ISR offset
+
+    
     ;TODO handle timers?
     ; TODO use 8 byte keyboard buffer, and single byte for head,tail so that it can be updated atomically. (increment nibble, clear bits 7 and 3)
-    ;TODO check for running program, call its ISR offset
     
     ; handle keyboard clock IOC
 ;keyboardIsr:
@@ -147,16 +149,7 @@ MAIN_PROG CODE                      ; let linker place main program
     #include <strings.asm>
     #include <editor.asm>
 
-START
-    ;set up tmr0 as 16 bit w/ 256 prescaler. overflows every 1.4s. tmr0H can be used for 1/183rds
-    ; TMR0ON = 1 | T08BIT = 0 | T0CS = 0 | T0SE = x | PSA = 0 (enabled) | T0PS = 111 (1:256)
-    movlw b'10000111'
-    movwf T0CON
-    bsf OSCCON, IRCF2, access ; set for 16Mhz x3 = 48mhz
-
-    
-    
-;    LFSR 0, line
+START    
     
     keyboardInit
     oledInit
