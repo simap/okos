@@ -8,6 +8,7 @@ fsr0to1:
     return
     
 startEditor:
+    bcf editorEditMode
     rcall resetBufferFsr
 editorClearMemoryLoop
     movlw '\n'
@@ -16,7 +17,7 @@ editorClearMemoryLoop
     bra editorClearMemoryLoop
     rcall resetBufferFsr
     
-editorCommandMode:
+editorDisplay:
     ;redraw display
     clrf oledRow
     rcall oledNewLine
@@ -27,35 +28,83 @@ editorDisplayLoop:
     bcf oledDrawCursor
     movf cursorY, w
     xorwf oledRow, w ; only on the right row
-    addwf oledCol, w ; and the 0th column
+    bnz editorDisplayNotSelectedLine
+    
+    movf cursorX, w
+    xorwf oledCol, w ; and the right column
     btfsc STATUS, Z
-    bsf oledDrawCursor
-    
-    
+    rcall editorHandleCursor ;handles setting cursor flags, inserting/deleting characters, etc
+editorDisplayNotSelectedLine:
     movf POSTINC1, w
     rcall oledDrawChar
     movf oledRow, w
     xorlw 0x7
     bnz editorDisplayLoop
     
-    ;read key and check for commands
-    rcall readKey    
-    rcall editorCommands
-    bra editorCommandMode
+    ;read key and check for commands or edits
+editorReadKey:
+    rcall readKey
     
+    ;check for esc
+    movlw 0x1b
+    xorwf keyboardAscii, w
+    bnz editorHandleModes
+    bcf editorEditMode
+    bra editorDisplay
+editorHandleModes:
+    btfss editorEditMode
+    rcall editorCommands
+    bra editorDisplay
+
 editorCommands:
     movf keyboardAscii, w
     andlw 0x7
     rlncf WREG
     addwf PCL
     return
-    bra editorEditMode	;happens to occur on 'a' and 'i' qy
+    bra editorSetEditMode	;happens to occur on 'a' and 'i' qy
     bra moveUp		;happens to occur on 'j' brz
     bra moveDown	;happens to occur on 'k' cs
     return ;dlt
     return ;emu
     return ;fnv
     return ;gow
+
+editorSetEditMode:
+    clrf keyboardAscii ; don't try to "type" the key used to enter edit mode
+    bsf editorEditMode
+    return
+    
+editorHandleCursor:
+    bsf oledDrawCursor
+    ;check to see if we're in edit mode
+    btfss editorEditMode
+    return
+    
+    movff FSR1L, FSR2L
+    movff FSR1H, FSR2H
+    
+    movf keyboardAscii, w
+    bz editorHandleCursorDone ; check for zero (bad char)
+    xorlw 0x8 ;check for  backspace
+    bz deleteChar ;will return for us
+    bra insertChar ; will return for us
+deleteChar:
+    ;copy all characters left overwriting previous char (copying last char to 2nd to last)
+    movf POSTDEC2, w ;copy curent char
+    movwf POSTINC2 ; overwrite previous char
+    movf POSTINC2, w ; go to next char
+    btfss FSR2H, 3 ; outside of implemented memory range
+    bra deleteChar
+    
+    return
+insertChar:
+    ;fsr1 points to cursor
+    ;copy all characters right (overwriting last char)
+    ;set cursor to inserted char
+editorHandleCursorDone: 
+    return
+
     
 moveUp:
 ;    cursorY--
@@ -90,12 +139,4 @@ nextLine:
     bnz nextLine
     return
     
-editorEditMode:
-    rcall fsr0to1
-    
-    
-    
-    
-    
-insertChar:
-    rcall fsr0to1
+
