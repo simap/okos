@@ -45,7 +45,6 @@ banked	equ	1
 #include <bensmacros.asm>
 
 
-
 ;*******************************************************************************
 ; Reset Vector
 ;*******************************************************************************
@@ -56,7 +55,7 @@ resetvector:
     ; TMR0ON = 1 | T08BIT = 0 | T0CS = 0 | T0SE = x | PSA = 0 (enabled) | T0PS = 111 (1:256)
     movlw b'10000111'
     movwf T0CON
-    bsf OSCCON, IRCF2, access ; set for 16Mhz x3 = 48mhz
+    bsf OSCCON, IRCF2 ; set for 16Mhz x3 = 48mhz
     bra    START                   ; go to beginning of program
     
 HIGHISR       CODE    0x0008
@@ -134,9 +133,10 @@ isr:
 ;*******************************************************************************    
     
 
-FONT_TABLE CODE 0x1a
+TABLE_DATA CODE 0x1a
 ;FONT_TABLE CODE
      #include <font.asm>
+     #include <keycodes.asm>
 
 ;TABLE_INDEX CODE
 ;table_index:
@@ -148,11 +148,20 @@ MAIN_PROG CODE                      ; let linker place main program
     #include <keyboard.asm>
     #include <strings.asm>
     #include <editor.asm>
+    #include <files.asm>
+    #include <assembler.asm>
 
 START    
+;    
+;    movlw 1
+;    movwf currentFile
+;    rcall openFile
+;    rcall saveFile
     
     keyboardInit
     oledInit
+    
+;    goto 0x2468
         
     goto $
 
