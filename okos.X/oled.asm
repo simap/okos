@@ -62,10 +62,13 @@ oledDrawChar
     tblrd*+
     movff TABLAT, oledFontData
     tblrd* ; keep high byte in TABLAT
+
+#if USE_LOWERCASE
     movff TABLAT, oledFontData+1
     
     ;remove descender bit from display (would show on 4th segment)
     bcf oledFontData+1, 7
+#endif
     
     rcall i2cStart
     movlw OLED_CONTROL_BYTE_DATA_STREAM
@@ -77,9 +80,13 @@ oledDrawCharLoop
     andwf oledFontData, w, access
     ;shift to center on line
     rlncf WREG
+
+#if USE_LOWERCASE    
     ;check for descender bit (tablat still has untouched high byte of font data)
     btfsc TABLAT, 7
     rlncf WREG
+#endif
+    
     btfsc oledDrawCursor
     bsf WREG, 7
     rcall i2cWrite
@@ -87,8 +94,14 @@ oledDrawCharLoop
     movlw .5
 oledFontShiftLoop
     bcf STATUS, C ; avoid shifting garbage into high bits so that on the 4th segment is empty
+#if USE_LOWERCASE
     rrcf oledFontData+1, f, access
     rrcf oledFontData, f, access
+#else
+    rrcf TABLAT, f, access
+    rrcf oledFontData, f, access
+#endif
+    
     decfsz WREG, f, access
     bra oledFontShiftLoop
     incf oledSegment, f, access
