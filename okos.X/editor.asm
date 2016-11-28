@@ -30,12 +30,15 @@ editorDisplayLoop:
     xorwf oledRow, w ; only on the right row
     bnz editorDisplayNotSelectedLine
 
+    btfsc editorEditMode
+    bra editorCheckCursor
     
-    ;TODO if cursorX > oledCol and next char is newline, set cursorX
-    ;if cursorX < oledCol go to editorDisplayNotSelectedLine
-    ;if next char == newline, setCursorX
-    ;if next char == newline or cursorX = oledCol, handleCursor (and set cursorX)
-        
+    movlw '\n'
+    xorwf INDF0
+    bnz editorDisplayNotSelectedLine
+    movff oledCol, cursorX
+    
+editorCheckCursor:
     movf cursorX, w
     xorwf oledCol, w ; and the right column
     btfsc STATUS, Z
