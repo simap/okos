@@ -55,10 +55,8 @@ oledDrawChar
     addlw .224 ;subtract 32 TODO non-ascii charset could avoid this
     rlncf WREG
     addlw font3x5
-    movwf TBLPTRL, access
-;    clrf TBLPTRU, access ; no need
-    movlw high(font3x5)
-    movwf TBLPTRH, access
+    movwf TBLPTRL
+    clrf TBLPTRH
     tblrd*+
     movff TABLAT, oledFontData
     tblrd* ; keep high byte in TABLAT
@@ -73,11 +71,11 @@ oledDrawChar
     rcall i2cStart
     movlw OLED_CONTROL_BYTE_DATA_STREAM
     rcall i2cWrite
-    clrf oledSegment, access
+    clrf oledSegment
 oledDrawCharLoop
     ;write low 5 bits, one segment of font pixels
     movlw 0x1f
-    andwf oledFontData, w, access
+    andwf oledFontData, w
     ;shift to center on line
     rlncf WREG
 
@@ -95,17 +93,17 @@ oledDrawCharLoop
 oledFontShiftLoop
     bcf STATUS, C ; avoid shifting garbage into high bits so that on the 4th segment is empty
 #if USE_LOWERCASE
-    rrcf oledFontData+1, f, access
-    rrcf oledFontData, f, access
+    rrcf oledFontData+1, f
+    rrcf oledFontData, f
 #else
-    rrcf TABLAT, f, access
-    rrcf oledFontData, f, access
+    rrcf TABLAT, f
+    rrcf oledFontData, f
 #endif
     
-    decfsz WREG, f, access
+    decfsz WREG, f
     bra oledFontShiftLoop
-    incf oledSegment, f, access
-    btfss oledSegment, 2, access
+    incf oledSegment, f
+    btfss oledSegment, 2
     bra oledDrawCharLoop ;more segments to draw
     rcall i2cStop
     incf oledCol, f
@@ -113,55 +111,55 @@ oledFontShiftLoop
     return
     
 i2cWait
-    btfss PIR1, SSPIF, access
+    btfss PIR1, SSPIF
     bra i2cWait
-    bcf PIR1, SSPIF, access
+    bcf PIR1, SSPIF
     return
     
 i2cStart
-    bsf SSP1CON2, SEN, access	    ;initate start condition
+    bsf SSP1CON2, SEN	    ;initate start condition
     movlw OLED_I2C_ADDRESS
     rcall i2cWrite
     return
     
 i2cStop
     rcall i2cWait
-    bsf SSP1CON2, PEN, access	    ;initate stop condition
+    bsf SSP1CON2, PEN	    ;initate stop condition
     rcall i2cWait
     return
     
 i2cWrite
     rcall i2cWait
-    movwf SSP1BUF, access
+    movwf SSP1BUF
     return
 
 ;W = number of bytes to send
 ;TBLPTR = sequence table
 oledWriteSequence
-    movwf oledWriteCount, access
+    movwf oledWriteCount
     rcall i2cStart
 oledWriteSequenceLoop
     tblrd*+
-    movf TABLAT, w, access
+    movf TABLAT, w
     rcall i2cWrite
-    decfsz oledWriteCount, f, access
+    decfsz oledWriteCount, f
     bra oledWriteSequenceLoop
     rcall i2cStop
     return
 
 oledInit macro
-;    bcf SSP1CON1, SSPEN, access	    ; disable mssp
-    bsf SSP1CON1, SSPM3, access	    ; i2c master mode
+;    bcf SSP1CON1, SSPEN	    ; disable mssp
+    bsf SSP1CON1, SSPM3	    ; i2c master mode
     movlw 0x1d			    ; 400khz @ 48mhz
-    movwf SSP1ADD, access
-;    bcf PIR1, SSPIF, access
-    bsf SSP1CON1, SSPEN, access	    ; enable mssp
+    movwf SSP1ADD
+;    bcf PIR1, SSPIF
+    bsf SSP1CON1, SSPEN	    ; enable mssp
     
-;    clrf TBLPTRU, access
+;    clrf TBLPTRU
     movlw high(oledInitSequence)
-    movwf TBLPTRH, access
+    movwf TBLPTRH
     movlw low(oledInitSequence)
-    movwf TBLPTRL, access
+    movwf TBLPTRL
     movlw .9
     rcall oledWriteSequence
     endm
@@ -171,9 +169,9 @@ oledNewLine
     rcall i2cStart
     movlw OLED_CONTROL_BYTE_CMD_STREAM
     rcall i2cWrite
-    incf oledRow, w, access
+    incf oledRow, w
     andlw 0x07
-    movwf oledRow, access
+    movwf oledRow
     iorlw OLED_CMD_SET_PAGE_START
     rcall i2cWrite
     movlw OLED_CMD_SET_COL_START_LOW
@@ -183,7 +181,7 @@ oledNewLine
     movf oledRow, w
     addlw .1
     mullw .8
-    movf PRODL, w, access
+    movf PRODL, w
     andlw 0x3f
     addlw OLED_CMD_SET_DISPLAY_START_LINE
     rcall i2cWrite
@@ -200,9 +198,9 @@ oledBlankLineLoop
     
 ;oledPrepDraw
 ;    movlw high(oledDrawSequence)
-;    movwf TBLPTRH, access
+;    movwf TBLPTRH
 ;    movlw low(oledDrawSequence)
-;    movwf TBLPTRL, access
+;    movwf TBLPTRL
 ;    movlw .7
 ;    rcall oledWriteSequence
 ;    return
