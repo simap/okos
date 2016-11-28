@@ -29,10 +29,17 @@ editorDisplayLoop:
     movf cursorY, w
     xorwf oledRow, w ; only on the right row
     bnz editorDisplayNotSelectedLine
+
     
+    ;TODO if cursorX > oledCol and next char is newline, set cursorX
+    ;if cursorX < oledCol go to editorDisplayNotSelectedLine
+    ;if next char == newline, setCursorX
+    ;if next char == newline or cursorX = oledCol, handleCursor (and set cursorX)
+        
     movf cursorX, w
     xorwf oledCol, w ; and the right column
     btfsc STATUS, Z
+    
     rcall editorHandleCursor ;handles setting cursor flags, inserting/deleting characters, etc
 editorDisplayNotSelectedLine:
     movf POSTINC1, w
@@ -57,18 +64,19 @@ editorHandleModes:
     bra editorDisplay
 
 editorCommands:
+    ;use lower 3 bits of ascii to get 8 different commands spread across keys
     movf keyboardAscii, w
     andlw 0x7
     rlncf WREG
     addwf PCL
-    return
-    bra editorSetEditMode	;happens to occur on 'a' and 'i' qy
-    bra moveUp		;happens to occur on 'j' brz
-    bra moveDown	;happens to occur on 'k' cs
-    return ;dlt
-    return ;emu
-    return ;fnv
-    return ;gow
+    return		    ;space hpx
+    bra editorSetEditMode   ;aiqy
+    bra moveUp		    ;jbrz
+    bra moveDown	    ;kcs
+    return		    ;dlt
+    return		    ;emu
+    return		    ;fnv
+    bra saveFile	    ;gow
 
 editorSetEditMode:
     clrf keyboardAscii ; don't try to "type" the key used to enter edit mode
@@ -92,25 +100,43 @@ editorHandleCursor:
 deleteChar:
     ;copy all characters left overwriting previous char (copying last char to 2nd to last)
     movf POSTDEC2, w ;copy curent char
-    movwf POSTINC2 ; overwrite previous char
+    movwf POSTINC2 ; overwrite previous char ; NOTE this may overwrite memory just before buffer starts
     movf POSTINC2, w ; go to next char
     btfss FSR2H, 3 ; outside of implemented memory range
     bra deleteChar
     
     return
 insertChar:
-    ;fsr1 points to cursor
-    ;copy all characters right (overwriting last char)
     ;set cursor to inserted char
+    incf cursorX, f
+    bcf oledDrawCursor
+insertCharLoop:
+    ;copy all characters right (overwriting last char)
+    movf POSTINC2, w
+    btfsc FSR2H, 3 ; outside of implemented memory range
+    return
+    movwf INDF2
+    bra insertCharLoop
+    
 editorHandleCursorDone: 
     return
 
     
 moveUp:
 ;    cursorY--
+    decf cursorY, f
+    btfss cursorY, 7 ;if negative
+    return
+    incf cursorY, f
+    bra previousLine
     
 moveDown:
 ;    cursorY++
+    incf cursorY, f
+    btfss cursorY, 3
+    return
+    decf cursorY, f
+    bra nextLine
 
 ;scan fsr0 to previous newline, up until buffer address starts
 previousLine:
