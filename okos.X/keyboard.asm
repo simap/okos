@@ -34,7 +34,7 @@ keyScanLoop:
     tstfsz TABLAT
     bnz keyScanLoop
     
-    movlw low(keyCodeTable)
+    movlw keyCodeTable
     subwf TBLPTRL, w
     movwf keyboardAscii
     

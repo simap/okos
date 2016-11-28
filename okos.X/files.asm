@@ -35,7 +35,6 @@ flushLastPage:
 saveFile:
     ;set up tblptr for writing
     rcall openFile
-
     lfsr 2, buffer
 saveFileLoop:
     movf POSTINC2, w

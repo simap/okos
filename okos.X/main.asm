@@ -137,13 +137,13 @@ TABLE_DATA CODE 0x1a
 ;FONT_TABLE CODE
      #include <font.asm>
      #include <keycodes.asm>
+     #include <opcodes.asm>
 
 ;TABLE_INDEX CODE
 ;table_index:
 ;    db 0,0
  
 MAIN_PROG CODE                      ; let linker place main program
-;    #include <tables.asm>
     #include <oled.asm>
     #include <keyboard.asm>
     #include <strings.asm>

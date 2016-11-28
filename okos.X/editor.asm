@@ -28,14 +28,14 @@ editorDisplayLoop:
     bcf oledDrawCursor
     movf cursorY, w
     xorwf oledRow, w ; only on the right row
-    bnz editorDisplayNotSelectedLine
+    bnz editorDisplayContinue
 
     btfsc editorEditMode
     bra editorCheckCursor
     
     movlw '\n'
     xorwf INDF0
-    bnz editorDisplayNotSelectedLine
+    bnz editorDisplayContinue
     movff oledCol, cursorX
     
 editorCheckCursor:
@@ -44,7 +44,7 @@ editorCheckCursor:
     btfsc STATUS, Z
     
     rcall editorHandleCursor ;handles setting cursor flags, inserting/deleting characters, etc
-editorDisplayNotSelectedLine:
+editorDisplayContinue:
     movf POSTINC1, w
     rcall oledDrawChar
     movf oledRow, w
