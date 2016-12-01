@@ -1,6 +1,6 @@
 
 ;it would be a shame not to showcase the descender support, but it takes 10 more bytes
-#define USE_LOWERCASE 1
+#define USE_LOWERCASE 0
 ;if < 32 or > 126 set black. take ascii subtract 32, use table lookup
 ;works as long as this remains in the same TBLPTRL space
 font3x5:
