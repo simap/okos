@@ -35,7 +35,7 @@ keyScanLoop:
     tstfsz TABLAT
     bnz keyScanLoop
     
-    movlw keyCodeTable
+    movlw keyCodeTable+1
     subwf TBLPTRL, w
     movwf keyboardAscii
     
@@ -64,9 +64,9 @@ readBits:
     btfsc PORTB, 4
     bra readBits
     ;read data bit
-    rlncf keyboardCode, f
+    rrncf keyboardCode, f
     btfsc PORTB, 3
-    bsf keyboardCode, 0
+    bsf keyboardCode, 7
     ;wait for clock to go high
 readBitWaitClockH:
     btfss PORTB, 4
