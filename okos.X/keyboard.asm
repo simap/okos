@@ -1,11 +1,12 @@
-
+;TODO test to see if turnaround time is low enough we can avoid holding clock low
+    
 keyboardInit macro
-    ;TODO add pull up resistors so we don't have to use wpu in code
-    ; pull clock low
+    ; pull clock latch low
     bcf LATB, 4
-    bcf TRISB, 4
-    ; set data pin as input
-    bsf TRISB, 3    
+    ;HACK after first time keyboard is read this will fix itself
+    ; worse case is a key is comming in while PIC is starting up and misses first bytes
+    ; since there is no timeout waiting for bits
+;    bcf TRISB, 4
     endm
 
 ;reads 1 key worth of codes from the keyboard (ps2 keyboards have 16 byte buffer)
@@ -42,8 +43,7 @@ keyParseDone:
     bcf keyboardIgnore
     ;if its anything higher than a0, ignore the sequence
     movlw 0xa0
-    subwf keyboardCode, w
-    btfsc STATUS, C
+    cpfslt keyboardCode
     bsf keyboardIgnore
     
     ; wait for parity and stop bits 
