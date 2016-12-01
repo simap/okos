@@ -1,4 +1,3 @@
-
 resetBufferFsr:
     LFSR 0, buffer
     return
@@ -14,7 +13,7 @@ startEditor:
     
 editorDisplay:
     ;redraw display
-    clrf oledRow
+;    clrf oledRow
     rcall oledNewLine
     rcall fsr0to1
     ;display characters and newlines until oledRow is 7
@@ -76,9 +75,11 @@ editorCommands:
     movlw 4
     cpfslt keyboardAscii
     return
+    ;read PCL to prime PCLAT
+    movf PCL, w
     movf keyboardAscii, w
     rlncf WREG
-    addwf PCL
+    addwf PCL, f
     bra saveFile	    ;gow
     bra moveUp		    ;jbrz
     bra moveDown	    ;kcs
