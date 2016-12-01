@@ -10,12 +10,7 @@ fsr0to1:
 startEditor:
     bcf editorEditMode
     rcall resetBufferFsr
-editorClearMemoryLoop
-    movlw '\n'
-    movwf POSTINC0
-    btfss FSR0H, 3 ; outside of implemented memory range
-    bra editorClearMemoryLoop
-    rcall resetBufferFsr
+    rcall loadFile
     
 editorDisplay:
     ;redraw display
@@ -29,12 +24,25 @@ editorDisplayLoop:
     movf cursorY, w
     xorwf oledRow, w ; only on the right row
     bnz editorDisplayContinue
-
+    
+;    if (row == cursorY)
+;	
+;	if (curChar == enter_key)
+;	    cursorX = col
+;	    set cursor bit
+;	    
+;	if (editormode)
+;	    if (key==bs)
+;		deleteChar
+;	    else
+;		insertChar
+	    
+    
     btfsc editorEditMode
     bra editorCheckCursor
     
-    movlw '\n'
-    xorwf INDF0
+    movlw KEY_ENTER
+    xorwf INDF0, w
     bnz editorDisplayContinue
     movff oledCol, cursorX
     
@@ -56,30 +64,26 @@ editorReadKey:
     rcall readKey
     
     ;check for esc
-    movlw 0x1b
-    xorwf keyboardAscii, w
-    bnz editorHandleModes
+    xorlw 0x1b
+    btfss STATUS, Z
     bcf editorEditMode
-    bra editorDisplay
-editorHandleModes:
     btfss editorEditMode
     rcall editorCommands
     bra editorDisplay
 
 editorCommands:
-    ;use lower 3 bits of ascii to get 8 different commands spread across keys
+    ;bail out if not 0-3
+    movlw 4
+    cpfslt keyboardAscii
+    return
     movf keyboardAscii, w
-    andlw 0x7
     rlncf WREG
     addwf PCL
-    return		    ;space hpx
-    bra editorSetEditMode   ;aiqy
+    bra saveFile	    ;gow
     bra moveUp		    ;jbrz
     bra moveDown	    ;kcs
-    return		    ;dlt
-    return		    ;emu
-    return		    ;fnv
-    bra saveFile	    ;gow
+    bra editorSetEditMode   ;aiqy
+    
 
 editorSetEditMode:
     clrf keyboardAscii ; don't try to "type" the key used to enter edit mode
@@ -96,8 +100,10 @@ editorHandleCursor:
     movff FSR1H, FSR2H
     
     movf keyboardAscii, w
-    bz editorHandleCursorDone ; check for zero (bad char)
-    xorlw 0x8 ;check for  backspace
+    xorlw KEY_BAD ; check for bad char
+    bz editorHandleCursorDone
+    ;NEAT HACK: xor the last test with a new test
+    xorlw KEY_BAD ^ KEY_BKSP ;check for backspace
     bz deleteChar ;will return for us
     bra insertChar ; will return for us
 deleteChar:
@@ -124,7 +130,6 @@ insertCharLoop:
 editorHandleCursorDone: 
     return
 
-    
 moveUp:
 ;    cursorY--
     decf cursorY, f
@@ -153,7 +158,7 @@ previousLineLoop:
     bra resetBufferFsr ;reset it back to the start, and this will return for us
 previousLineDec:
     movf POSTDEC0, w ;no pre-dec, still faster
-    movlw '\n'
+    movlw KEY_ENTER
     xorwf INDF0, w
     bnz previousLineLoop
     movf POSTINC0, w ; adjust to just after the previous newline
@@ -161,11 +166,10 @@ previousLineDec:
     
 ;scan fsr0 past next newline, up until BUFFER_MAX_ADDR
 nextLine:
-    movlw '\n'
-    xorwf PREINC0, w
+    movlw KEY_ENTER
+    xorwf POSTINC0, w
     btfsc FSR0H, 3 ; outside of implemented memory range
     bra previousLine
     bnz nextLine
     return
     
-
