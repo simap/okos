@@ -7,6 +7,7 @@
 ;writes the next byte in WREG to the holding registers
 ;if a 64b page boundary is crossed, the page is flushed
 fputc:
+    bsf pageDirty
     movwf TABLAT
     tblwt*+
     movlw 0x3f
@@ -27,22 +28,40 @@ flushLastPage:
     movlw b'10000100'
     rcall startFlashWrite
     
-    tblrd*-; repair tblptr
+    tblrd*+; repair tblptr
     bsf INTCON, GIE
+    bcf pageDirty
     return
+    
+closeFlush macro
+    btfsc pageDirty
+    rcall flushLastPage
+    endm
     
 ;copies buffer data to the "file" referenced by currentFile
 saveFile:
     ;set up tblptr for writing
     rcall openFile
-    lfsr 2, buffer
 saveFileLoop:
     movf POSTINC2, w
     rcall fputc
     btfss FSR2H, 3 ; outside of implemented memory range
     bra saveFileLoop
-
     return
+    
+loadFile:
+    ;set up tblptr for writing
+    rcall openFile
+loadFileLoop:
+    tblrd*+
+    movf TABLAT, w
+    btfsc WREG, 7 ;this is only called on text files, so if we load erased pages (0xff), make them into newlines
+    movlw KEY_ENTER
+    movwf POSTINC2
+    btfss FSR2H, 3 ; outside of implemented memory range
+    bra loadFileLoop
+    return
+    
 
 ;sets TBLPTR to the section of memory pointed to by currentFile
 openFile:
@@ -51,6 +70,7 @@ openFile:
     movff PRODL, TBLPTRH
     ;TODO offset by 1 page (64 bytes) to reserve some room for file metadata.
     clrf TBLPTRL
+    lfsr 2, buffer
     return
     
 ;sets EECON1 to WREG value

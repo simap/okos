@@ -1,3 +1,12 @@
+
+#define KEY_SEMICOLON .36
+#define KEY_PERIOD .37
+    
+#define KEY_SPACE .38
+#define KEY_ESC .39
+#define KEY_ENTER .40
+#define KEY_BKSP .41
+#define KEY_BAD .42
     
 keyCodeTable:
     db 0x45, 0x16  ; 0 1
@@ -19,7 +28,7 @@ keyCodeTable:
     db 0x1D, 0x22  ; w x
     db 0x35, 0x1A  ; y z
     db 0x4C, 0x49  ; ; .
-    db 0x5A, 0x66  ; ENTER BKSP
     db 0x29, 0x76  ; SPACE ESC
+    db 0x5A, 0x66  ; ENTER BKSP
     db 00,00	   ; not found, end of table
     
