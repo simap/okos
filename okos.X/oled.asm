@@ -45,14 +45,11 @@
     ;if WREG == '\n', calls oledNewLine instead
 oledDrawChar
     ;check for newline
-    xorlw '\n'
-    bnz oledNewLine
-    xorlw '\n' ; wasn't newline, repair bits
-    
-    ;TODO support tab?
-    
+    xorlw KEY_ENTER
+    bz oledNewLine
+    xorlw KEY_ENTER ; wasn't newline, repair bits
+        
    ;load font data
-    addlw .224 ;subtract 32 TODO non-ascii charset could avoid this
     rlncf WREG
     addlw font3x5
     movwf TBLPTRL
@@ -133,35 +130,24 @@ i2cWrite
     movwf SSP1BUF
     return
 
-;W = number of bytes to send
-;TBLPTR = sequence table
-oledWriteSequence
-    movwf oledWriteCount
-    rcall i2cStart
-oledWriteSequenceLoop
-    tblrd*+
-    movf TABLAT, w
-    rcall i2cWrite
-    decfsz oledWriteCount, f
-    bra oledWriteSequenceLoop
-    rcall i2cStop
-    return
 
 oledInit macro
-;    bcf SSP1CON1, SSPEN	    ; disable mssp
     bsf SSP1CON1, SSPM3	    ; i2c master mode
     movlw 0x1d			    ; 400khz @ 48mhz
     movwf SSP1ADD
-;    bcf PIR1, SSPIF
     bsf SSP1CON1, SSPEN	    ; enable mssp
-    
-;    clrf TBLPTRU
-    movlw high(oledInitSequence)
-    movwf TBLPTRH
-    movlw low(oledInitSequence)
-    movwf TBLPTRL
-    movlw .9
-    rcall oledWriteSequence
+    rcall i2cStart
+    movlw OLED_CONTROL_BYTE_CMD_STREAM
+;    rcall i2cWrite
+;    movlw OLED_CMD_DISPLAY_OFF
+    rcall i2cWrite
+    movlw OLED_CMD_SET_CHARGE_PUMP
+    rcall i2cWrite
+    movlw 0x14
+    rcall i2cWrite
+    movlw OLED_CMD_DISPLAY_ON
+    rcall i2cWrite
+    rcall i2cStop
     endm
 
 ; increment oled row, reset column pos, set start line to simulate infinite scroll, and clear the new line
@@ -178,6 +164,9 @@ oledNewLine
     rcall i2cWrite
     movlw OLED_CMD_SET_COL_START_HIGH
     rcall i2cWrite
+    ;calculate start display line to the next row
+    ;this puts the new line on the bottom of the screen
+    ;and looks like infinite scrolling
     movf oledRow, w
     addlw .1
     mullw .8
@@ -190,34 +179,17 @@ oledNewLine
     movwf oledWriteCount
     clrf oledCol
 oledBlankLineLoop
-    movlw ' '
+    movlw KEY_SPACE
     rcall oledDrawChar
     decfsz oledWriteCount, f
     bra oledBlankLineLoop
     return
     
-;oledPrepDraw
-;    movlw high(oledDrawSequence)
-;    movwf TBLPTRH
-;    movlw low(oledDrawSequence)
-;    movwf TBLPTRL
-;    movlw .7
-;    rcall oledWriteSequence
-;    return
-    
-;oledDrawSequence ; 7 bytes
-;    db OLED_CONTROL_BYTE_CMD_STREAM, OLED_CMD_SET_COLUMN_RANGE
-;    db 0x00, 0x7F
-;    db OLED_CMD_SET_PAGE_RANGE, 0
-;    db 0x07
-
-oledInitSequence ; 10 bytes
-
-    db OLED_CONTROL_BYTE_CMD_STREAM, OLED_CMD_DISPLAY_OFF
-    db OLED_CMD_SET_SEGMENT_REMAP, OLED_CMD_SET_COM_SCAN_MODE
-    db OLED_CMD_SET_CHARGE_PUMP, 0x14
-    db OLED_CMD_SET_VCOMH_DESELCT, 0x30
-    db OLED_CMD_DISPLAY_ON, OLED_CMD_DISPLAY_ON
+;    db OLED_CONTROL_BYTE_CMD_STREAM, OLED_CMD_DISPLAY_OFF
+;    db OLED_CMD_SET_SEGMENT_REMAP, OLED_CMD_SET_COM_SCAN_MODE
+;    db OLED_CMD_SET_CHARGE_PUMP, 0x14
+;    db OLED_CMD_SET_VCOMH_DESELCT, 0x30
+;    db OLED_CMD_DISPLAY_ON, OLED_CMD_DISPLAY_ON
     
 ;26 bytes
 ;    db OLED_CONTROL_BYTE_CMD_STREAM, OLED_CMD_DISPLAY_OFF
