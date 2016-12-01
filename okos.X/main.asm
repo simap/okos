@@ -1,9 +1,13 @@
-
-;    LIST	 P=18LF25K50
-
+;*******************************************************************************
+; OKOS - One Kilobyte Operating System
+;
+; A user operating system in 1kB.
+; OKOS us just OK because OKOS is just OK.
+; 
+; Hacked together using the Hackaday Superconference Badge
+;*******************************************************************************
 #include p18f25k50.inc
 
-    
  config PLLSEL = PLL3X      ; 3x clock multiplier
  config CFGPLLEN = ON       ; PLL Enabled
  config CPUDIV = NOCLKDIV   ; 1:1 mode
@@ -35,15 +39,11 @@
  config EBTR0 = OFF         ; Block 0 is not protected from table reads executed in other blocks
  config EBTRB = OFF         ; Boot block is not protected from table reads executed in other blocks
 
-access	equ	0
-banked	equ	1
-	
-; TODO PLACE VARIABLE DEFINITIONS GO HERE
+;*******************************************************************************
+; Memory allocations
+;*******************************************************************************
 
 #include <memory.asm>
-
-#include <bensmacros.asm>
-
 
 ;*******************************************************************************
 ; Reset Vector
@@ -57,93 +57,53 @@ resetvector:
     movwf T0CON
     bsf OSCCON, IRCF2 ; set for 16Mhz x3 = 48mhz
     bra    START                   ; go to beginning of program
-    
+
+;*******************************************************************************
+; Interrupt Vector
+; OKOS doesn't use ISRs, but supports user ISRS offset by 4.
+; The code to support that is hidden in the area usually occupied by the high
+; priority interrupt vector.
+;*******************************************************************************
+
 HIGHISR       CODE    0x0008
-highisr:
-    ;TODO maybe hide some data here, perhaps the 16 opcodes
-    db 0x11, 0x11
-    db 0x11, 0x11
-    db 0x11, 0x11
-    db 0x11, 0x11
-    db 0x11, 0x11
-    db 0x11, 0x11
-    db 0x11, 0x11
-    db 0x11, 0x11
+       ; don't suport high priority interrupts, instead, hide some code here that calls the user's ISR
+userIsr:
+    movf currentFile, w ;load current file and multiple by 8 to get it's 2k offset
+    rlncf WREG, f
+    rlncf WREG, f
+    rlncf WREG, f
+    movwf PCLATH
+    movlw .4 ; user ISR vector. TODO offset by 1 page (64 bytes) to reserve some room for file metadata.
+    movwf PCL
+return_bra: ; HACK: user can jump to this location in order to effect a return from subroutine (instead of supporting a 'return' mnemonic)
+    return
 
 LOWISR       CODE    0x0018
 isr:
     ;TODO check for running program, call its ISR offset
-
+    ;interrupts won't be enabled unless a user program is run and enables them
+    ;user's ISR is responsible for saving and restoring registers used beyond WREG, STATUS, and BSR (done automatically)
+    ;user's ISR must then return (retfie is not supported by the assembler)
     
-    ;TODO handle timers?
-    ; TODO use 8 byte keyboard buffer, and single byte for head,tail so that it can be updated atomically. (increment nibble, clear bits 7 and 3)
-    
-    ; handle keyboard clock IOC
-;keyboardIsr:
-;    btfss INTCON, IOCIF
-;    bra notKeyboard
-;    btfsc PORTB, 4
-;    bra endKeyboardIsr
-;    
-;    ;check for timeout
-;    ;load tmr0h by reading tmr0l
-;    movf TMR0L, w
-;    movf keyboardBitTimer, w
-;    subwf TMR0H, w
-;    ;sublw 2 ???
-;endKeyboardIsr:
-;    bcf INTCON, IOCIF
-;notKeyboard:
-;    movff FSR0L, fsr0_temp
-;    movff FSR0H, fsr0_temp+1
-;    movff TBLPTRL, TBLPTR_TEMP+0
-;    movff TBLPTRH, TBLPTR_TEMP+1
-;    
-;    movff TBLPTR_TEMP+0, TBLPTRL
-;    movff TBLPTR_TEMP+1, TBLPTRH
-    
-;    movff fsr0_temp, FSR0L
-;    movff fsr0_temp+1, FSR0H
+    rcall userIsr
     RETFIE FAST ; restores STATUS, WREG, BSR. only usable if high priority interrupts are not enabled
 
-;----------------------------------PIC18's--------------------------------------
-;
-; ISRHV     CODE    0x0008
-;     GOTO    HIGH_ISR
-; ISRLV     CODE    0x0018
-;     GOTO    LOW_ISR
-;
-; ISRH      CODE                     ; let linker place high ISR routine
-; HIGH_ISR
-;     <Insert High Priority ISR Here - no SW context saving>
-;     RETFIE  FAST
-;
-; ISRL      CODE                     ; let linker place low ISR routine
-; LOW_ISR
-;       <Search the device datasheet for 'context' and copy interrupt
-;       context saving code here>
-;     RETFIE
-;
+;*******************************************************************************
+; Table Data
+; tables are put in the first page of flash to make access easier
+; this is placed just after the ISR code
 ;*******************************************************************************
 
-; TODO INSERT ISR HERE
+TABLE_DATA CODE 0x1c
+     #include <font.asm>
+     #include <keycodes.asm>
+     #include <opcodes.asm>
 
 ;*******************************************************************************
 ; MAIN PROGRAM
 ;*******************************************************************************    
     
-
-TABLE_DATA CODE 0x1a
-;FONT_TABLE CODE
-     #include <font.asm>
-     #include <keycodes.asm>
-     #include <opcodes.asm>
-
-;TABLE_INDEX CODE
-;table_index:
-;    db 0,0
- 
-MAIN_PROG CODE                      ; let linker place main program
+MAIN_PROG CODE ; let linker place main program
     #include <oled.asm>
     #include <keyboard.asm>
     #include <strings.asm>
@@ -151,19 +111,75 @@ MAIN_PROG CODE                      ; let linker place main program
     #include <files.asm>
     #include <assembler.asm>
 
-START    
-;    
-;    movlw 1
-;    movwf currentFile
-;    rcall openFile
-;    rcall saveFile
+START
+    clrf flags
     
+;    #include <testassembler.asm>
+
     keyboardInit
+
+;    #include <testkeyboard.asm>
+
     oledInit
     
-;    goto 0x2468
-        
     goto $
+
+;    movlw 1
+;    movwf currentFile
+;    goto startEditor
+    
+;    goto 0x2468
+;testLoop:
+;    movlw 0x0b
+;    rcall oledDrawChar
+;    movlw 0x1b
+;    rcall oledDrawChar
+;    movlw 0x0a
+;    rcall oledDrawChar
+;    movlw 0x26
+;    rcall oledDrawChar
+;    movlw 0x01
+;    rcall oledDrawChar
+;    movlw 0x02
+;    rcall oledDrawChar
+;    movlw 0x03
+;    rcall oledDrawChar
+;    movlw 0x04
+;    rcall oledDrawChar
+;    movlw 0x28
+;    rcall oledDrawChar
+;    movlw 0x0c
+;    rcall oledDrawChar
+;    movlw 0x0a
+;    rcall oledDrawChar
+;    movlw 0x15
+;    rcall oledDrawChar
+;    movlw 0x26
+;    rcall oledDrawChar
+;    movlw 0x01
+;    rcall oledDrawChar
+;    movlw 0x02
+;    rcall oledDrawChar
+;    movlw 0x03
+;    rcall oledDrawChar
+;    movlw 0x04
+;    rcall oledDrawChar
+;    movlw 0x28
+;    rcall oledDrawChar
+;    movlw 0x1b
+;    rcall oledDrawChar
+;    movlw 0x0e
+;    rcall oledDrawChar
+;    movlw 0x1d
+;    rcall oledDrawChar
+;    movlw 0x28
+;    rcall oledDrawChar
+;    movlw 0x25
+;    rcall oledDrawChar
+;    movlw 0x28
+;    rcall oledDrawChar
+;    goto testLoop
+;
 
 endofmain
     end
