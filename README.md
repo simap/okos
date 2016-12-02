@@ -6,42 +6,53 @@ Tiny OS for 1kB challenge
 MVP
 ---
 
-* filesystem (8.3, even numbered/named file slots is ok, anything really), extent/linkedlist based
-* keyboard driver (ps2?) and api
-	* isr for keyboard clock pin
-	* scan code map/table
-	* handle keyup or keydown at minimum, fifo buffer
 * display driver and api
-	* probably need a minimal font - remember Apple ][ uppercase only font (but perhaps lowercase)
+	* minimal font - remember original Apple ][ uppercase only font
 	* Use 3x5 tiny font
 	* text drawing api
-* cli with some built-ins
+		* oledDrawChar
+		* oledNewLine
+	* optional lowercase font, with descender support 3x5.5!
+* filesystem (if you can call it that)
+	* Actually just chopping 32k flash into 16 2k files.
+* keyboard driver and api
+	* ps2 keyboard interface
+	* scan code map/table
+	* handle only keyup. Keyboard gives you repeat for free
+* cli/menu with some built-ins
 	* minimal assembler
+		* what kind of OS doesn't let you write code?!?
+		* minimal, but workable, instruction set support
 	* editor
+		* Hopefully better than edlin
 	* run
-	* ls
+		* user program takes over
+		* core API available
+		* user ISR supported
 
 Notes
 ----
 
 ### keyboard
 
-ps2 
+Supports PS2 keyboards, decode scancodes.
 
-* simple protocol, keyboard will spam
-* can ignore keydown, listen for keyup events. ignore most special keys
+* simple protocol
+* can ignore keyup. 
+* ignore most special keys.
 
 ### filesystem
 
-* pic18f25k50 has 32k flash. flash is written in 64B blocks. 64B = 512 bits. 512 * 64 = 32k. A single 64B block can be used to map a file to any number of non contiguous 64B blocks in available memory. It won't order them, but could provide a non-contigous sequential mapping.
+* pic18f25k50 has 32k flash. Split into 16 "files" of 2k each. file 0 (half of it anyway) contains okos.
+* TODO reserve first page, 64b, for metadata.
 
 
 ### display
 
-* The 2 decent res color LCDs I have both require almost 100 bytes of commands and init code
-* the 128x64 oled needs about 35 bytes of setup. give 32x10 display, plus 4 pixels
-* Font can be 128 or 192 bytes. Each face is 15 bits, can use the 16th bit to shift down for subscript
-* Would need to render characters on the fly
+* the 128x64 oled needs very little setup.
+* could get 10 lines of text (+ 4 pixels spare), but requires extra bit shifting. 8 lines of 8 pixels is easy w/ the displays 8 bit tall row x 128 segments.
+* Full 7-bit ASCII support (96 chars) is 192 bytes. Each face is 15 bits, can use the 16th bit to shift down for descenders.
+* Unbuffered, render characters on the fly and send to display
 
 
 ### MCU
@@ -50,30 +61,50 @@ pic18f25k50
 
 * uses 16-bit instruction words, and can store 2-8bit bytes per word easily.
 * has 32k of flash, leaving 31k for filesystem
-* has 1k eeprom, could be used for fs metadata given better write durability
+* has 1k eeprom
+* Has almost enough RAM to fit entire 2k file into memory. 
 
 ### Assembler
 
-movf
-movwf
+Minimal usable PIC instruction set.
 
-addwf
+3 character mnemonics to save space.
 
-andwf
-iorwf
-xorwf
+* `;` for comments, can be anywhere
+* `.` on a line alone to end the file/parsing
 
-rlcf
-rrcf
+| PIC instruction | short mnemonic | args | notes |
+| --- | --- | --- | --- |
+| bcf | bcf | f, b | 1 instruction |
+| bsf | bsf | f, b | 1 instruction |
+| btfsc | btc | f, b | 1 instruction |
+| btfss | bts | f, b | 1 instruction |
+| movlw | mvl | k | 1 instruction |
+| movwf | mvw | f | 1 instruction |
+| movf | mvf | f, d | 1 instruction |
+| addwf | add | f, d | 1 instruction |
+| andwf | and | f, d | 1 instruction |
+| iorwf | ior | f, d | 1 instruction |
+| xorwf | xor | f, d | 1 instruction |
+| rlcf | rlc | f, d | 1 instruction |
+| rrcf | rrc | f, d | 1 instruction |
+| goto | bra | k | 2 instructions<br>target address is doubled. Think of them as instruction word addresses instead of byte addresses. File 1 starts at `0x400`|
+| call | cal | k | 2 instructions. Same addressing as goto |
+| return | - | - | NOT IMPLEMENTED<br>Use **`cal b`** |
 
-movlw
+**NOTE** return is not implemented, but a return instruction is placed at address 0x16 (word 0xb), jumping there will effect a return.
 
-bcf
-bsf
-btfsc
-btfss
+User ISR starts at offset **`0x04`**, the second instruction. Boilerplate program with an ISR:
 
-goto
-call
-return
+```
+bra 0012 ; jump past ISR
+; insert your ISR code here
+; ...
+bra 000b ; execute a return
+; at word 12. insert your code here
+. ; EOF
+```
 
+User memory starts at address 0x16, anything before that is needed by the core API. If you don't use the API, feel free to reclaim this memory! Note that if you use ISRs, address 0x00 controls which file block the ISR jumps to.
+
+TODO support labels. Yes without this its a pain.

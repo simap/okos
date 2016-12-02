@@ -7,9 +7,8 @@
     udata
 ;nope
     udata_acs
-flags		res 1;* flag bit register
-
 currentFile	res 1;* which bank of memory is active. used for editor and assembler and running programs
+flags		res 1;* flag bit register
 
 keyboardCode	res 1
 keyboardAscii	res 1;* used to be ASCII, not anymore
