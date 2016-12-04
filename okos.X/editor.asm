@@ -37,7 +37,7 @@ nextLine:
     rcall drawLine
     bcf editorSkipDraw
     return
-    
+
 drawLine:
     ;draw the gutter, an arror for the cursor line
     movf cursorY, w
@@ -65,6 +65,7 @@ drawLineDone:
     movf POSTINC0, w
     btfss editorSkipDraw
     rcall oledDrawFlushLine
+checkInsertOrDeleteDone: ; borrowing this return instruction
     return
     
 checkInsertOrDelete:
@@ -81,8 +82,6 @@ checkInsertOrDelete:
     bz deleteChar
     bnc checkInsertOrDeleteDone
     bra insertChar
-checkInsertOrDeleteDone:
-    return ;TODO could borrow another return for branching and save 1 instruction here
     
 moveUp:
 ;    cursorY--
@@ -162,9 +161,6 @@ editoDrawAllLinesLoop:
     
 editorDoKeyboard:
     rcall readKey
-    
-    ;if char <= space, then insert char
-    ;else
     
     xorlw CHAR_UP
     bz moveUp
