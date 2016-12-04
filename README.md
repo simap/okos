@@ -90,7 +90,7 @@ Minimal usable PIC instruction set.
 | rrcf | rrc | f, d | 1 instruction |
 | goto | bra | k | 2 instructions<br>target address is doubled. Think of them as instruction word addresses instead of byte addresses. File 1 starts at `0x400`|
 | call | cal | k | 2 instructions. Same addressing as goto |
-| return | - | - | NOT IMPLEMENTED<br>Use **`cal b`** |
+| return | - | - | NOT IMPLEMENTED<br>Use **`bra b`** |
 
 **NOTE** return is not implemented, but a return instruction is placed at address 0x16 (word 0xb), jumping there will effect a return.
 
