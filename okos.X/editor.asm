@@ -130,8 +130,7 @@ insertCharDone:
 startEditor:
     clrf cursorY
     rcall resetBufferFsr
-    movlw CHAR_BAD
-    movwf keyboardAscii
+    setf keyboardAscii ; set to garbage so we don't try to handle leftover keystrokes
     
 editorMainLoop:
     rcall setFsr2ToLine ; fsr2 could be dirty from file operations (load/save)
