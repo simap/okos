@@ -2,7 +2,7 @@
 testKeyboardLoop:
     
     rcall readKey
-    xorlw KEY_BAD
+    xorlw CHAR_BAD
     bz testKeyboardLoop
     movf keyboardAscii, w
     rcall oledDrawChar

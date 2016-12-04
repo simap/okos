@@ -14,13 +14,14 @@ keyboardCode	res 1
 keyboardAscii	res 1;* used to be ASCII, not anymore
 
 oledWriteCount	res 1
-oledRow		res 1;*
+oledRow		res 1;* also contains row setting flags in high nibble
 oledCol		res 1;*
 oledSegment	res 1;
 oledFontData	res 2; temp 16bit for decoding font pixels
 
-;editorTemp	res 1
-	
+editorTemp	res 1
+editorOffset	res 1; current line offset from top of screen (using fsr0)
+
 cursorX		res 1
 cursorY		res 1
 
@@ -35,8 +36,14 @@ tblptr_save	res 2
 bitbucket	res 1 ; a memory location just before buffer, allows underruning by 1 to save code space
 buffer		res 1 ; the rest of memory
 
+#define oledDontSetStart oledRow, 4
+#define oledStartTop oledRow, 5
+
+
 #define pageDirty flags,0
 #define keyboardIgnore flags,1
-#define oledDrawCursor flags,2
 #define editorEditMode flags,3
 #define oledWriteCommandMode flags,4
+#define editorAtStartOfFile flags,5
+#define editorSkipDraw flags,6
+		

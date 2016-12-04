@@ -11,11 +11,11 @@ parseAssemblerLine:
     
     ;see if this is a comment or newline
     movf INDF0, w
-    xorlw KEY_SEMICOLON
+    xorlw CHAR_SEMICOLON
     bz parseAssemblerLineDone
-    xorlw KEY_SEMICOLON ^ KEY_ENTER
+    xorlw CHAR_SEMICOLON ^ CHAR_ENTER
     bz parseAssemblerLineDone
-    xorlw KEY_ENTER ^ KEY_PERIOD ; period is end of file marker
+    xorlw CHAR_ENTER ^ CHAR_PERIOD ; period is end of file marker
     bz parseAssemblerDone
     
     ;save tblptr so we can use it to look up opcodes
@@ -84,7 +84,7 @@ parseMnemonicDone:
     rcall fputc
 parseAssemblerLineDone:  ; go here if newline or comment char
     
-    rcall nextLine
+    rcall drawLine
     bra parseAssemblerLine
     
 parseAssemblerDone:    
@@ -121,7 +121,7 @@ writeArg:
 
 ;scan fsr0 past spaces
 nextWord:
-    movlw KEY_SPACE
+    movlw CHAR_SPACE
     xorwf POSTINC0, w
     bz nextWord
     movf POSTDEC0, w ; go back to non-space char

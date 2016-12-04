@@ -41,7 +41,7 @@ keyScanLoop:
     
 keyParseDone:
     bcf keyboardIgnore
-    ;if its anything higher than a0, ignore the sequence
+    ;if its anything higher than a0, ignore the sequence, e.g. E0, F0
     movlw 0xa0
     cpfslt keyboardCode
     bsf keyboardIgnore

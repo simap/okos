@@ -56,7 +56,7 @@ loadFileLoop:
     tblrd*+
     movf TABLAT, w
     btfsc WREG, 7 ;this is only called on text files, so if we load erased pages (0xff), make them into newlines
-    movlw KEY_ENTER
+    movlw CHAR_ENTER
     movwf POSTINC2
     btfss FSR2H, 3 ; outside of implemented memory range
     bra loadFileLoop

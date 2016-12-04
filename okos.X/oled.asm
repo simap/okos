@@ -40,14 +40,16 @@
 
 ; NOP
 #define OLED_CMD_NOP 				0xE3
+
+;TODO try repeated starts, may be able to get away with no stop commands. 
     
     ;take ascii char in WREG, get 3x5 pixels from font table, unpack and send to display
     ;if WREG == '\n', calls oledNewLine instead
 oledDrawChar
     ;check for newline
-    xorlw KEY_ENTER
+    xorlw CHAR_ENTER
     bz oledNewLine
-    xorlw KEY_ENTER ; wasn't newline, repair bits
+    xorlw CHAR_ENTER ; wasn't newline, repair bits
         
    ;load font data
     rlncf WREG
@@ -82,8 +84,6 @@ oledDrawCharLoop
     rlncf WREG
 #endif
     
-    btfsc oledDrawCursor
-    bsf WREG, 7
     rcall i2cWrite
     ;shift everything 5 bits to the right to get the next col of font pixels
     movlw .5
@@ -150,39 +150,57 @@ oledInit macro
     rcall i2cStop
     endm
 
-; increment oled row, reset column pos, set start line to simulate infinite scroll, and clear the new line
-oledNewLine
+    
+    
+    
+; set write row to oledRow, set start line to row+1 to simulate infinite scroll, reset column pos
+oledSetRow:
     rcall i2cStart
     movlw OLED_CONTROL_BYTE_CMD_STREAM
     rcall i2cWrite
-    incf oledRow, w
-    andlw 0x07
-    movwf oledRow
+    movf oledRow, w
     iorlw OLED_CMD_SET_PAGE_START
     rcall i2cWrite
     movlw OLED_CMD_SET_COL_START_LOW
     rcall i2cWrite
     movlw OLED_CMD_SET_COL_START_HIGH
     rcall i2cWrite
-    ;calculate start display line to the next row
+    btfsc oledDontSetStart
+    bra oledSetRowDone
+    
+    ;calculate start display line
+    ;if oledStartTop is clear, set to to the next row
     ;this puts the new line on the bottom of the screen
     ;and looks like infinite scrolling
+    ;if oledStartTop is set, set to current row
+    ;this puts the current row at the top of the display 
     movf oledRow, w
+    btfss oledStartTop
     addlw .1
     mullw .8
     movf PRODL, w
     andlw 0x3f
     addlw OLED_CMD_SET_DISPLAY_START_LINE
     rcall i2cWrite
+oledSetRowDone
     rcall i2cStop
+    clrf oledCol
+    return
+
+; increment oled row, and clear the new line  
+oledNewLine:
+    incf oledRow, f
+    bcf oledRow, 3
+oledLineNoInc:    
+    rcall oledSetRow
+oledClearLine:
     movlw .32
     movwf oledWriteCount
-    clrf oledCol
-oledBlankLineLoop
-    movlw KEY_SPACE
+oledClearLineLoop:
+    movlw CHAR_SPACE
     rcall oledDrawChar
     decfsz oledWriteCount, f
-    bra oledBlankLineLoop
+    bra oledClearLineLoop
     return
     
 ;    db OLED_CONTROL_BYTE_CMD_STREAM, OLED_CMD_DISPLAY_OFF
