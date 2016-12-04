@@ -31,60 +31,58 @@ previousLineLoop:
     bnz previousLineLoop
     movf POSTINC0, w ; adjust to just after the previous newline
     return
-    
-skipNLines:
-    movwf editorTemp
+
+nextLine:
     bsf editorSkipDraw
-skipNLinesLoop:
     rcall drawLine
-    decfsz editorTemp, f
-    bra skipNLinesLoop
     bcf editorSkipDraw
     return
     
-previousNLines:
-    movwf editorTemp
-previousNLinesLoop:
-    rcall previousLine
-    decfsz editorTemp, f
-    bra previousNLinesLoop
-    return
-    
 drawLine:
-    ;draw a space for cursor (a gutter)
+    ;draw the gutter, an arror for the cursor line
+    movf cursorY, w
+    xorwf oledRow, w
+    movlw CHAR_RIGHT_ARROW
+    btfss STATUS, Z
     movlw CHAR_SPACE
-    rcall oledDrawChar
-    movf POSTINC0, w
+    btfss editorSkipDraw
+    movwf POSTINC2
+
+drawLineLoop:
+    movf INDF0, w
     xorlw CHAR_ENTER
     bz drawLineDone ; return if char is newline
-    xorlw CHAR_ENTER ;repair bits
+    movf INDF0, w ; reload
     btfss editorSkipDraw
-    rcall oledDrawChar
-    bra drawLine
+    movwf POSTINC2
+    movf POSTINC0, w ; next char
+    bra drawLineLoop
 drawLineDone:
+    ;skip draw also indicates pending edit/insert
+    btfsc editorSkipDraw
+    rcall checkInsertOrDelete
+    ;skip over newline
+    movf POSTINC0, w
+    btfss editorSkipDraw
+    rcall oledDrawFlushLine
     return
-
-
-;drawGutter:
-;    clrf editorTemp
-;    bsf oledDontSetStart
-;drawGutterLoop:
-;    incf oledRow, f
-;    bcf oledRow, 3
-;    rcall oledSetRow
-;    
-;    movf cursorY
-;    xorwf editorTemp, w
-;    
-;    movlw CHAR_SPACE
-;    btfsc STATUS, Z
-;    movlw CHAR_RIGHT_ARROW
-;    rcall oledDrawChar
-;    
-;    incf editorTemp, f
-;    btfss editorTemp, 3
-;    bra drawGutterLoop
-;    return
+    
+checkInsertOrDelete:
+    ;only do this at the tail end of the cursor line
+    movf cursorY, w
+    xorwf oledRow, w
+    bnz checkInsertOrDeleteDone
+    
+    ;check and handle a pending insert/delete
+    rcall fsr0to1 ; fsr1 used for modifications calls
+    ;see if its an insertable char
+    movf keyboardAscii, w
+    sublw CHAR_BKSP
+    bz deleteChar
+    bnc checkInsertOrDeleteDone
+    bra insertChar
+checkInsertOrDeleteDone:
+    return ;TODO could borrow another return for branching and save 1 instruction here
     
 moveUp:
 ;    cursorY--
@@ -92,7 +90,7 @@ moveUp:
     btfss cursorY, 7 ;if negative
     return
     incf cursorY, f
-    bra scrollUp
+    bra previousLine
     
 moveDown:
 ;    cursorY++
@@ -100,68 +98,68 @@ moveDown:
     btfss cursorY, 3
     return
     decf cursorY, f
-    bra scrollDown
+    bra nextLine
 
-    
-scrollDown:
-    movlw .8
-    rcall skipNLines
-    rcall oledNewLine
-    rcall drawLine
-    movlw .8
-    rcall previousNLines
-    return
-    
-scrollUp:
-    rcall checkFsr0
-    btfsc editorAtStartOfFile
+;assumes fsr1 points the location to delete (shift left) a character
+deleteChar:
+    ;copy all characters left overwriting previous char (copying last char to 2nd to last)
+    movf POSTDEC1, w ;copy curent char
+    movwf POSTINC1 ; overwrite previous char ; NOTE this may overwrite memory just before buffer starts
+    movf POSTINC1, w ; go to next char
+    btfss FSR1H, 3 ; outside of implemented memory range
+    bra deleteChar
     return
 
-    rcall previousLine
+;assumes fsr0 and fsr1 point to same location, the place to insert the character in keyboardAscii
     
-    bsf oledStartTop
-    rcall oledLineNoInc
-    rcall drawLine
-    rcall previousLine
-    
-    ;subtract one from oledRow
-    movlw .7
-    addwf oledRow, f
-    bcf oledRow, 3
-
-    bcf oledStartTop
-    
+insertChar:
+    ;load the first char, point to next
+    movf POSTINC1, w    
+insertCharLoop:
+    btfsc FSR1H, 3 ; outside of implemented memory range
+    bra insertCharDone
+    ;swap w with INDF1, and point to next
+    xorwf INDF1, w ; W := A^B; X = B
+    xorwf INDF1, f ; W = A^B, X := B^(A^B) = A
+    xorwf POSTINC1, w ; W := (A^B)^A = B; X = A
+    bra insertCharLoop
+insertCharDone:
+    movff keyboardAscii, INDF0
     return
-    
-    
+
 startEditor:
     clrf cursorY
-    clrf oledRow ; also contains row setting flags
     rcall resetBufferFsr
-    ;draw all lines initially
-    ;if we use newLine + draw for scroll down, same code can be reused for initial draw
-    
-editoDrawAllLines:
-    movlw .8
-    movwf editorTemp
-editoDrawAllLinesLoop:
-    rcall oledNewLine
-    rcall drawLine
-;    rcall nextLine
-    decfsz editorTemp, f
-    bra editoDrawAllLinesLoop
-    ;go back to where we started (undo the 8 next lines
-    movlw .8
-    rcall previousNLines
-    
-    
+    movlw CHAR_BAD
+    movwf keyboardAscii
     
 editorMainLoop:
+    rcall setFsr2ToLine ; fsr2 could be dirty from file operations (load/save)
+    ; dry run display to handle inserts
+    bsf editorSkipDraw
+    rcall editoDrawAllLines
+    ; then actually display
+    bcf editorSkipDraw
+    rcall editoDrawAllLines
     
+    ;check keys and loop to draw
     rcall editorDoKeyboard
-;    rcall drawGutter
-    
     bra editorMainLoop
+    
+editoDrawAllLines:
+    clrf oledRow
+    movff FSR0L, fsr0_save
+    movff FSR0H, fsr0_save+1
+editoDrawAllLinesLoop:
+    rcall drawLine
+    incf oledRow, f
+    btfss oledRow, 3
+    bra editoDrawAllLinesLoop
+;    bcf oledRow, 3
+    ;reset fsr0 back to where we started (undo the 8 lines worth of fsr0 incrementing)
+    movff fsr0_save, FSR0L
+    movff fsr0_save+1, FSR0H
+    return
     
 editorDoKeyboard:
     rcall readKey
@@ -170,177 +168,10 @@ editorDoKeyboard:
     ;else
     
     xorlw CHAR_UP
-    bz scrollUp
+    bz moveUp
     xorlw CHAR_DOWN ^ CHAR_UP
-    bz scrollDown
+    bz moveDown
     xorlw CHAR_F1 ^ CHAR_DOWN
     bz saveFile
-    
+    ;otherwise, assume it is an insert/delete at cursor location (end of cursor line) 
     return
-    ;after initial redraw, row=cursor row, setRow oledDontSetStart=1, and redraw line before newline    
-    ;scroll down: row = lastRow setRow oledStartTop=0, draw line, fill remaining with blanks
-    ;scroll up: row = firstRow, setRow oledStartTop=1, draw line, fill remaining with blanks
-    ;when inserting, just draw the char
-    ;when backspace, redraw the cursor line
-    ;when typing enter, insert a newline and increment cursor (scrolling down if needed), then back to redraw cursor line
-    
-    
-    
- 
-    
-;startEditor:
-;    rcall loadFile
-;    rcall resetBufferFsr
-;    
-;;    /*
-;;    display lines:
-;;	draw until eol
-;;	place cursor at eol
-;;	handle pending insert/delete
-;;    
-;;    */
-;    
-;    
-;    
-;    
-;    
-;    
-;    
-;    
-;    
-;editorDisplay:
-;    ;redraw display
-;;    clrf oledRow
-;    rcall oledNewLine
-;    rcall fsr0to1
-;    ;display characters and newlines until oledRow is 7
-;editorDisplayLoop:
-;    ;draw line cursor
-;    bcf oledDrawCursor
-;    movf cursorY, w
-;    xorwf oledRow, w ; only on the right row
-;    bnz editorDisplayContinue
-;    
-;;    if (row == cursorY)
-;;	
-;;	if (curChar == enter_key)
-;;	    cursorX = col
-;;	    set cursor bit
-;;	    
-;;	if (editormode)
-;;	    if (key==bs)
-;;		deleteChar
-;;	    else
-;;		insertChar
-;	    
-;    
-;    btfsc editorEditMode
-;    bra editorCheckCursor
-;    
-;    movlw CHAR_ENTER
-;    xorwf INDF0, w
-;    bnz editorDisplayContinue
-;    movff oledCol, cursorX
-;    
-;editorCheckCursor:
-;    movf cursorX, w
-;    xorwf oledCol, w ; and the right column
-;    btfsc STATUS, Z
-;    
-;    rcall editorHandleCursor ;handles setting cursor flags, inserting/deleting characters, etc
-;editorDisplayContinue:
-;    movf POSTINC1, w
-;    rcall oledDrawChar
-;    movf oledRow, w
-;    xorlw 0x7
-;    bnz editorDisplayLoop
-;    
-;    ;read key and check for commands or edits
-;editorReadKey:
-;    rcall readKey
-;    
-;    ;check for esc
-;    xorlw 0x1b
-;    btfss STATUS, Z
-;    bcf editorEditMode
-;    btfss editorEditMode
-;    rcall editorCommands
-;    bra editorDisplay
-;
-;editorCommands:
-;    ;bail out if not 0-3
-;    movlw 4
-;    cpfslt keyboardAscii
-;    return
-;    ;read PCL to prime PCLAT
-;    movf PCL, w
-;    movf keyboardAscii, w
-;    rlncf WREG
-;    addwf PCL, f
-;    bra saveFile	    ;gow
-;    bra moveUp		    ;jbrz
-;    bra moveDown	    ;kcs
-;    bra editorSetEditMode   ;aiqy
-;    
-;
-;editorSetEditMode:
-;    clrf keyboardAscii ; don't try to "type" the key used to enter edit mode
-;    bsf editorEditMode
-;    return
-;    
-;editorHandleCursor:
-;    bsf oledDrawCursor
-;    ;check to see if we're in edit mode
-;    btfss editorEditMode
-;    return
-;    
-;    movff FSR1L, FSR2L
-;    movff FSR1H, FSR2H
-;    
-;    movf keyboardAscii, w
-;    xorlw CHAR_BAD ; check for bad char
-;    bz editorHandleCursorDone
-;    ;NEAT HACK: xor the last test with a new test
-;    xorlw CHAR_BAD ^ CHAR_BKSP ;check for backspace
-;    bz deleteChar ;will return for us
-;    bra insertChar ; will return for us
-;deleteChar:
-;    ;copy all characters left overwriting previous char (copying last char to 2nd to last)
-;    movf POSTDEC2, w ;copy curent char
-;    movwf POSTINC2 ; overwrite previous char ; NOTE this may overwrite memory just before buffer starts
-;    movf POSTINC2, w ; go to next char
-;    btfss FSR2H, 3 ; outside of implemented memory range
-;    bra deleteChar
-;    
-;    return
-;insertChar:
-;    ;set cursor to inserted char
-;    incf cursorX, f
-;    bcf oledDrawCursor
-;insertCharLoop:
-;    ;copy all characters right (overwriting last char)
-;    movf POSTINC2, w
-;    btfsc FSR2H, 3 ; outside of implemented memory range
-;    return
-;    movwf INDF2
-;    bra insertCharLoop
-;    
-;editorHandleCursorDone: 
-;    return
-;
-;moveUp:
-;;    cursorY--
-;    decf cursorY, f
-;    btfss cursorY, 7 ;if negative
-;    return
-;    incf cursorY, f
-;    bra previousLine
-;    
-;moveDown:
-;;    cursorY++
-;    incf cursorY, f
-;    btfss cursorY, 3
-;    return
-;    decf cursorY, f
-;    bra nextLine
-;

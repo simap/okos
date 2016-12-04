@@ -32,7 +32,11 @@ assemblerTemp	res 1
 assemblerArg	res 3
 
 tblptr_save	res 2
+
+fsr0_save	res 2
 	
+line		res 32
+
 bitbucket	res 1 ; a memory location just before buffer, allows underruning by 1 to save code space
 buffer		res 1 ; the rest of memory
 
@@ -46,4 +50,4 @@ buffer		res 1 ; the rest of memory
 #define oledWriteCommandMode flags,4
 #define editorAtStartOfFile flags,5
 #define editorSkipDraw flags,6
-		
+#define editorPendingEdit flags,6

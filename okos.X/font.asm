@@ -72,4 +72,4 @@ font3x5:
     db	0x50,0x01	;59 ';'
     db	0x00,0x02	;46 '.'
     db	0x00,0x00	;32 ' '
-    db  0x11,0xdf   ;32 '->' (right arrow, used for line cursor)
+    db  0xdf,0x11   ;32 '->' (right arrow, used for line cursor)
