@@ -1,11 +1,20 @@
 
+    clrf oledRow
 testKeyboardLoop:
     
     rcall readKey
-    xorlw CHAR_BAD
+    
+    sublw CHAR_BKSP
     bz testKeyboardLoop
+    bnc testKeyboardLoop
+
     movf keyboardAscii, w
-    rcall oledDrawChar
+    appendChar
+
+    rcall oledDrawFlushLine
+
+    incf oledRow, f
+    bcf oledRow, 3
     
     bra testKeyboardLoop
     
