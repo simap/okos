@@ -27,7 +27,7 @@ Features
 	* What kind of OS doesn't let you write code?!?
 	* Minimal, but workable, instruction set support.
 	* Writes executable machine code into another file. Not interpreted!
-* Vidual Text Editor
+* Visual Text Editor
 	* Hopefully better than edlin
 * Run
 	* User program takes over
