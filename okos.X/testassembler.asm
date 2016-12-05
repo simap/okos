@@ -1,7 +1,6 @@
 
 
     movlw 1
-    movwf currentFile
     rcall loadFile
     
     rcall openFile
@@ -23,7 +22,6 @@ loadTestCodeDone
     
 
     movlw 2
-    movwf currentFile
     rcall openFile
     
     bra assemblerStart

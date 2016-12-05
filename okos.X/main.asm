@@ -26,7 +26,8 @@
  config STVREN = OFF        ; Stack full/underflow will not cause Reset
  config LVP = OFF           ; Single-Supply ICSP disabled
  config XINST = OFF         ; Instruction set extension and Indexed Addressing mode disabled
- config DEBUG = OFF         ; Bkgnd debugger disabled, RB6 and RB7 configured as gp I/O pins
+; config DEBUG = ON         ; Bkgnd debugger disabled, RB6 and RB7 configured as gp I/O pins
+ config ICPRT = OFF
  config CP0 = OFF           ; Block 0 is not code-protected
  config CP1 = OFF           ; Block 1 is not code-protected
  config CPB = OFF           ; Boot block is not code-protected
@@ -51,10 +52,8 @@
 
 RES_VECT  CODE    0x0000            ; processor reset vector
 resetvector:
-    ;set up tmr0 as 16 bit w/ 256 prescaler. overflows every 1.4s. tmr0H can be used for 1/183rds
-    ; TMR0ON = 1 | T08BIT = 0 | T0CS = 0 | T0SE = x | PSA = 0 (enabled) | T0PS = 111 (1:256)
-    movlw b'10000111'
-    movwf T0CON
+    clrf flags
+    clrf cursorY
     bsf OSCCON, IRCF2 ; set for 16Mhz x3 = 48mhz
     bra    START                   ; go to beginning of program
 
@@ -112,74 +111,15 @@ MAIN_PROG CODE ; let linker place main program
     #include <assembler.asm>
 
 START
-    clrf flags
     
 ;    #include <testassembler.asm>
 
     keyboardInit
+    oledInit
 
 ;    #include <testkeyboard.asm>
-
-    oledInit
     
-    goto $
-
-;    movlw 1
-;    movwf currentFile
-;    goto startEditor
-    
-;    goto 0x2468
-;testLoop:
-;    movlw 0x0b
-;    rcall oledDrawChar
-;    movlw 0x1b
-;    rcall oledDrawChar
-;    movlw 0x0a
-;    rcall oledDrawChar
-;    movlw 0x26
-;    rcall oledDrawChar
-;    movlw 0x01
-;    rcall oledDrawChar
-;    movlw 0x02
-;    rcall oledDrawChar
-;    movlw 0x03
-;    rcall oledDrawChar
-;    movlw 0x04
-;    rcall oledDrawChar
-;    movlw 0x28
-;    rcall oledDrawChar
-;    movlw 0x0c
-;    rcall oledDrawChar
-;    movlw 0x0a
-;    rcall oledDrawChar
-;    movlw 0x15
-;    rcall oledDrawChar
-;    movlw 0x26
-;    rcall oledDrawChar
-;    movlw 0x01
-;    rcall oledDrawChar
-;    movlw 0x02
-;    rcall oledDrawChar
-;    movlw 0x03
-;    rcall oledDrawChar
-;    movlw 0x04
-;    rcall oledDrawChar
-;    movlw 0x28
-;    rcall oledDrawChar
-;    movlw 0x1b
-;    rcall oledDrawChar
-;    movlw 0x0e
-;    rcall oledDrawChar
-;    movlw 0x1d
-;    rcall oledDrawChar
-;    movlw 0x28
-;    rcall oledDrawChar
-;    movlw 0x25
-;    rcall oledDrawChar
-;    movlw 0x28
-;    rcall oledDrawChar
-;    goto testLoop
-;
+    #include <cli.asm>
 
 endofmain
     end

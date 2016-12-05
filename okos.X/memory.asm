@@ -40,14 +40,9 @@ line		res 32
 bitbucket	res 1 ; a memory location just before buffer, allows underruning by 1 to save code space
 buffer		res 1 ; the rest of memory
 
-#define oledDontSetStart oledRow, 4
-#define oledStartTop oledRow, 5
-
 
 #define pageDirty flags,0
 #define keyboardIgnore flags,1
-#define editorEditMode flags,3
-#define oledWriteCommandMode flags,4
-#define editorAtStartOfFile flags,5
-#define editorSkipDraw flags,6
-#define editorPendingEdit flags,6
+#define editorEditMode flags,2
+#define editorAtStartOfFile flags,3
+#define editorSkipDraw flags,4

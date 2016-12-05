@@ -16,7 +16,7 @@ fputc:
     return
 ;flushes the page the previous TBLPTR address points to
 flushLastPage:
-    bcf INTCON, GIE
+;    bcf INTCON, GIE
     tblrd*-; go back to previous page
     ; erase a page of program flash
     ; EEPGD = 1 | CFGS = 0 | x | FREE = 1 | x | WREN = 1 | WR = 0 | RD = 0
@@ -29,7 +29,7 @@ flushLastPage:
     rcall startFlashWrite
     
     tblrd*+; repair tblptr
-    bsf INTCON, GIE
+;    bsf INTCON, GIE
     bcf pageDirty
     return
     
@@ -38,16 +38,17 @@ closeFlush macro
     rcall flushLastPage
     endm
     
-;copies buffer data to the "file" referenced by currentFile
+;copies buffer data to the "file" referenced by file in WREG
 saveFile:
     ;set up tblptr for writing
+    movf currentFile, w
     rcall openFile
 saveFileLoop:
     movf POSTINC2, w
     rcall fputc
     btfss FSR2H, 3 ; outside of implemented memory range
     bra saveFileLoop
-    return
+    reset
     
 loadFile:
     ;set up tblptr for writing
@@ -63,9 +64,8 @@ loadFileLoop:
     return
     
 
-;sets TBLPTR to the section of memory pointed to by currentFile
+;sets TBLPTR to the section of memory pointed to by file in WREG
 openFile:
-    movf currentFile, w
     mullw 0x8
     movff PRODL, TBLPTRH
     ;TODO offset by 1 page (64 bytes) to reserve some room for file metadata.

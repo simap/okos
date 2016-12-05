@@ -1,3 +1,6 @@
+#define CHAR_A .10
+#define CHAR_E .14
+#define CHAR_R .27
 
 #define CHAR_SEMICOLON .36
 #define CHAR_PERIOD .37
