@@ -5,12 +5,14 @@ Tiny OS for 1kB challenge.
 
 Blurring the line between embedded system and general purpose computer. Inspired by all those wizardly tricks that brought computing to the masses on limited hardware.
 
+OKOS is an operating system that allows the user to edit text or assembly source files code, assemble these into executables, and run their programs.
+
 Features
 ---
 
 * Runs on a PIC18f25k50, the MCU in the HaD SuperCon Badge!
 * Display driver and API
-	* Supports SSD1306 OLED display with 128x64 pixels over i2c.
+	* Supports SSD1306 OLED display with 128x64 pixels over i2c, with the font included that is 32x8 characters.
 	* Minimal 3x5 tiny font (remember original Apple ][ uppercase only font?)
 	* Line buffered text drawing api (write whole row at a time)
 	* Optional lowercase font, with descender support 3x5.5! But it takes 10 more bytes to support :(
