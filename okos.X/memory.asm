@@ -35,7 +35,7 @@ tblptr_save	res 2
 
 fsr0_save	res 2
 	
-line		res 32
+line		res .32
 
 bitbucket	res 1 ; a memory location just before buffer, allows underruning by 1 to save code space
 buffer		res 1 ; the rest of memory
