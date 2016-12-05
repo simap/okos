@@ -3,12 +3,12 @@ One Kilobyte Operating System (OKOS)
 
 Tiny OS for 1kB challenge.
 
-Blurring the line between embedded system and general purpose computer. Inspired by all those wizardly tricks that brought computing to the masses on limited hardward.
+Blurring the line between embedded system and general purpose computer. Inspired by all those wizardly tricks that brought computing to the masses on limited hardware.
 
 Features
 ---
 
-* Runs on the HaD SuperCon Badge! (only for the MCU though)
+* Runs on a PIC18f25k50, the MCU in the HaD SuperCon Badge!
 * Display driver and API
 	* Supports SSD1306 OLED display with 128x64 pixels over i2c.
 	* Minimal 3x5 tiny font (remember original Apple ][ uppercase only font?)
@@ -39,6 +39,7 @@ One Kilobyte
 ---
 
 ![Code usage by category](codeBreakdown.png)
+
 
 Visual Text Editor
 ================
