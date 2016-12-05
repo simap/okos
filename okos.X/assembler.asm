@@ -1,7 +1,6 @@
 
     
 assemblerStart:
-    rcall resetBufferFsr
 parseAssemblerLine:
 ;    rcall fsr0to1
     

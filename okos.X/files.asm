@@ -61,6 +61,7 @@ loadFileLoop:
     movwf POSTINC2
     btfss FSR2H, 3 ; outside of implemented memory range
     bra loadFileLoop
+    rcall resetBufferFsr
     return
     
 

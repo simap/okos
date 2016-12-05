@@ -126,11 +126,7 @@ insertCharDone:
     movff keyboardAscii, INDF0
     return
 
-startEditor:
-    clrf cursorY
-    rcall resetBufferFsr
-    setf keyboardAscii ; set to garbage so we don't try to handle leftover keystrokes
-    
+startEditor:    
 editorMainLoop:
     rcall setFsr2ToLine ; fsr2 could be dirty from file operations (load/save)
     ; dry run display to handle inserts

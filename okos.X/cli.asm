@@ -57,6 +57,8 @@ cliAssembler:
 cliEditor:
     bra startEditor
 cliRun:
+    movf currentFile, w
+    rcall openFile
     movff TBLPTRH, PCLATH
     clrf PCL
     
