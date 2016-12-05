@@ -18,7 +18,7 @@ function encode(c) {
 
 
 	// if (c == chr("\n"))
-		return 39; //anything else is a newline
+		return 40; //anything else is a newline
 }
 
 function chr(s) {
