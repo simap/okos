@@ -8,7 +8,7 @@ Blurring the line between embedded system and general purpose computer. Inspired
 Features
 ---
 
-* Runs on the HaD SuperCon Badge!
+* Runs on the HaD SuperCon Badge! (only for the MCU though)
 * Display driver and API
 	* Supports SSD1306 OLED display with 128x64 pixels over i2c.
 	* Minimal 3x5 tiny font (remember original Apple ][ uppercase only font?)
@@ -22,7 +22,7 @@ Features
 	* PS2 keyboard interface. You probably want an extended keyboard with a numeric keypad (more on that later).
 	* Minimal scan code map/table.
 	* Keyboard gives you repeat for free.
-* Very basic cli lets you edit files, assemble them, and run programs
+* Very basic command line interface lets you edit files, assemble them, and run programs
 * Minimal instruction set assembler for the PIC MCU
 	* What kind of OS doesn't let you write code?!?
 	* Minimal, but workable, instruction set support.
@@ -33,9 +33,28 @@ Features
 	* User program takes over
 	* Core API available
 	* User program interrupts supported (ISR vector depends on what program is running)
+* OKOS is just ok because OKOS is just OK.
 
+One Kilobyte
+---
 
-### Assembler
+![Code usage by category](codeBreakdown.png)
+
+Visual Text Editor
+================
+
+Edit a text file with `e <file>` e.g. `e 1` to edit the text file `1`.
+
+The current line will have an arrow in the left-side gutter. Arrow keys are not supported, but instead the keypad 8 (up) and 2 (down) keys are used for navigating. You can scroll through the file with these arrow keys.
+
+The cursor is always at the end of the line. You can delete with backspace (including over newlines), or type to add more characters to a line. Pressing enter will append a newline.
+
+Save the file with the `F1` key.
+
+Assembler
+================
+
+Assemble a file with `a <source> <out>` e.g. `a 1 2` assembles source code in file `1` writing the executable to file `2`.
 
 Minimal usable PIC instruction set.
 
@@ -57,7 +76,7 @@ bra 000b ; execute a return
 . ; EOF
 ```
 
-User memory starts at address 0x4c, with the line buffer at 0x1A, anything before that is needed by the core API. If you don't use the API, feel free to reclaim this memory! Note that if you use ISRs, address 0x00 controls which file block the ISR jumps to.
+User memory starts at address 0x3A, with the line buffer at 0x1A, anything before that is needed by the core API. If you don't use the API, feel free to reclaim this memory! Note that if you use ISRs, address 0x00 controls which file block the ISR jumps to.
 
 Unfortunately, there wasn't enough room to support labels.
 
@@ -91,7 +110,7 @@ These API are available and potentially useful to user written programs.
 
 | Routine           | address    | cal address | Notes   |
 | ----------------- | ---------- | ----------- | ------- | 
-| return_bra        | 0x000016   | 000B        | Use this to return. `cal b` like, uh, call back. yeah! |
+| return_bra        | 0x000016   | 000B        | Use this to return. |
 | oledDrawFlushLine | 0x00012c   | 0096        | write up to 32 characters to 0x1A. Filled with spaces on return. | 
 | readKey           | 0x00015c   | 00AE        | Waits for keypress, returns character in WREG, also in 0x03. Blocks until key is pressed. You probably want to write something better in an ISR. |
 | openFile          | 0x0002d2   | 0169        | Sets up TBLPTR for reading/writing to the given file in WREG |
@@ -99,8 +118,15 @@ These API are available and potentially useful to user written programs.
 | flushLastPage     | 0x0002a2   | 0151        | If bit 0 in memory 0x01 is set, you need to call this once to flush the last page, since pages are only flushed by fputc in 64b increments. |
 
 
+Running Programs
+================
+
+Once you've written and assembled an executable, you can run with with `r <file>` e.g. `r 2` to run file `2`.
+
+Your program takes over until the computer is reset.
+
 Notes
-----
+================
 
 ### Character set
 
@@ -138,3 +164,47 @@ Microchip PIC18f25k50
 * Has almost enough RAM to fit entire 2k "file" into memory. 
 * Also happens to be in the HaD SuperCon Badge.
 
+
+1K Mapfile evidence
+========
+
+Here's the mapfile section info. Note that configuraton fuses are located at `0x300000` and are not actually program flash, the programm usage calculation is flawed! Program memory ends (and includes) address `0x0003fd` - 1022 bytes. Also `.cinit` is a bug/feature of MPLAB that could be removed with a custom linker file.
+
+```
+MPLINK 5.08, LINKER
+Linker Map File - Created Sun Dec  4 17:28:46 2016
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                 RES_VECT       code   0x000000    program   0x000008
+                  HIGHISR       code   0x000008    program   0x000010
+                   LOWISR       code   0x000018    program   0x000004
+               TABLE_DATA       code   0x00001c    program   0x0000ba
+                   .cinit    romdata   0x0000d6    program   0x000002
+                MAIN_PROG       code   0x0000d8    program   0x000326
+.config_300000_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300000    program   0x000001
+.config_300001_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300001    program   0x000001
+.config_300002_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300002    program   0x000001
+.config_300003_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300003    program   0x000001
+.config_300005_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300005    program   0x000001
+.config_300006_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300006    program   0x000001
+.config_300008_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300008    program   0x000001
+.config_300009_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300009    program   0x000001
+.config_30000A_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x30000a    program   0x000001
+.config_30000B_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x30000b    program   0x000001
+.config_30000C_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x30000c    program   0x000001
+.config_30000D_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x30000d    program   0x000001
+               .udata_acs      udata   0x000000       data   0x00003c
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x0003fd      
+                            0x300000    0x300003      
+                            0x300005    0x300006      
+                            0x300008    0x30000d      
+            1034 out of 33048 program addresses used, program memory utilization is 3%
+```
