@@ -2,7 +2,6 @@
     
 assemblerStart:
     rcall resetBufferFsr
-    
 parseAssemblerLine:
 ;    rcall fsr0to1
     
@@ -63,7 +62,7 @@ parseMnemonicDone:
     movf POSTINC0, w
     movf POSTINC0, w
     
-    rcall parseArg    
+    rcall parseArg
     rcall fputc
     
     movff assemblerArg+1, assemblerArg+2 ; save this in case of GOTO/CALL
@@ -84,7 +83,7 @@ parseMnemonicDone:
     rcall fputc
 parseAssemblerLineDone:  ; go here if newline or comment char
     
-    rcall drawLine
+    rcall nextLine
     bra parseAssemblerLine
     
 parseAssemblerDone:    
