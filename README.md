@@ -126,6 +126,13 @@ Once you've written and assembled an executable, you can run with with `r <file>
 
 Your program takes over until the computer is reset.
 
+Hardware
+================
+
+OKOS was written on and designed to run on the PIC MCU in the HaD SuperCon badge. The badge exposes a few GPIO, with i2c support. A small bit of interface hardware is required for i2c, and to level shift the 5v PS2 keyboard signals. This was assembled on a home made toner transfer PCB.
+
+![Schematic diagram](schematic.png)
+
 Notes
 ================
 
