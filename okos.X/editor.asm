@@ -131,24 +131,24 @@ editorMainLoop:
     rcall setFsr2ToLine ; fsr2 could be dirty from file operations (load/save)
     ; dry run display to handle inserts
     bsf editorSkipDraw
-    rcall editoDrawAllLines
+    rcall editorDrawAllLines
     ; then actually display
     bcf editorSkipDraw
-    rcall editoDrawAllLines
+    rcall editorDrawAllLines
     
     ;check keys and loop to draw
     rcall editorDoKeyboard
     bra editorMainLoop
     
-editoDrawAllLines:
+editorDrawAllLines:
     clrf oledRow
     movff FSR0L, fsr0_save
     movff FSR0H, fsr0_save+1
-editoDrawAllLinesLoop:
+editorDrawAllLinesLoop:
     rcall drawLine
     incf oledRow, f
     btfss oledRow, 3
-    bra editoDrawAllLinesLoop
+    bra editorDrawAllLinesLoop
 ;    bcf oledRow, 3
     ;reset fsr0 back to where we started (undo the 8 lines worth of fsr0 incrementing)
     movff fsr0_save, FSR0L
