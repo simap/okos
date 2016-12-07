@@ -174,6 +174,11 @@ Microchip PIC18f25k50
 * Has almost enough RAM to fit entire 2k "file" into memory. 
 * Also happens to be in the HaD SuperCon Badge.
 
+### A Comment on Interrupts
+
+First of all, I love interrupts. It's why I added some hooks that allow user programs to have ISRs at all.
+
+However, when I went to write the i2c display stuff and the keyboard handling code, the ISR quickly consumed a lot of program space just saving and restoring registers. On top of that, the state machine, timers/timeouts, checking flags, etc. all took more space than I had.
 
 1K Mapfile evidence
 ========
