@@ -90,9 +90,8 @@ oledFontShiftLoop
     decfsz WREG, f
     bra oledFontShiftLoop
     incf oledSegment, f
-    btfss oledSegment, 2
+    btfss oledSegment, 2 ; 0-3, stop at 4
     bra oledDrawCharLoop ;more segments to draw
-;    rcall i2cStop
     incf oledCol, f
     bcf oledCol, 5 ; keep it 0-31
     return
