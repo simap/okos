@@ -8,6 +8,8 @@
 ;*******************************************************************************
 #include p18f25k50.inc
 
+#define INCLUDE_EXAMPLE_FILES 0
+    
  config PLLSEL = PLL3X      ; 3x clock multiplier
  config CFGPLLEN = ON       ; PLL Enabled
  config CPUDIV = NOCLKDIV   ; 1:1 mode
@@ -102,7 +104,7 @@ TABLE_DATA CODE 0x1c
 ; MAIN PROGRAM
 ;*******************************************************************************    
     
-MAIN_PROG CODE ; let linker place main program
+MAIN_PROG CODE 0xd6
     #include <oled.asm>
     #include <keyboard.asm>
     #include <strings.asm>
@@ -112,6 +114,7 @@ MAIN_PROG CODE ; let linker place main program
 
 START
     
+    
 ;    #include <testassembler.asm>
 
     keyboardInit
@@ -120,7 +123,11 @@ START
 ;    #include <testkeyboard.asm>
     
     #include <cli.asm>
-
+    
+#if INCLUDE_EXAMPLE_FILES
+    #include <examplefiles.asm>
+#endif
+    
 endofmain
     end
     
