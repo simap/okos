@@ -35,7 +35,7 @@
 ;space 9a/51
     
 #define TOUCH_THRESHOLD_RELEASE 0x87
-#define TOUCH_THRESHOLD_PRESS 0x6a
+#define TOUCH_THRESHOLD_PRESS 0x77
     
 ; CONFIG1
 ; __config 0xFF84

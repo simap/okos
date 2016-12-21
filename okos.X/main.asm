@@ -9,6 +9,9 @@
 #include p18f25k50.inc
 
 #define INCLUDE_EXAMPLE_FILES 0
+#define PS2_KEYBOARD 0
+
+#include <charset.h>
     
  config PLLSEL = PLL3X      ; 3x clock multiplier
  config CFGPLLEN = ON       ; PLL Enabled
@@ -97,16 +100,22 @@ isr:
 
 TABLE_DATA CODE 0x1c
      #include <font.asm>
-     #include <keycodes.asm>
+#if PS2_KEYBOARD
+     #include <keycodesPs2.asm>
+#endif
      #include <opcodes.asm>
 
 ;*******************************************************************************
 ; MAIN PROGRAM
 ;*******************************************************************************    
     
-MAIN_PROG CODE 0xd6
+MAIN_PROG CODE 
     #include <oled.asm>
-    #include <keyboard.asm>
+#if PS2_KEYBOARD
+    #include <keyboardPs2.asm>
+#else
+    #include <keyboardTouch.asm>
+#endif
     #include <strings.asm>
     #include <editor.asm>
     #include <files.asm>
