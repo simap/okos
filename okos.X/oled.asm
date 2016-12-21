@@ -92,8 +92,6 @@ oledFontShiftLoop
     incf oledSegment, f
     btfss oledSegment, 2 ; 0-3, stop at 4
     bra oledDrawCharLoop ;more segments to draw
-    incf oledCol, f
-    bcf oledCol, 5 ; keep it 0-31
     return
     
 i2cWait

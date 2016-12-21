@@ -9,6 +9,7 @@
 #include p18f25k50.inc
 
 #define INCLUDE_EXAMPLE_FILES 0
+;set this to support a PS2 keyboard instead of the custom capacitive touch keyboard
 #define PS2_KEYBOARD 0
 
 #include <charset.h>
@@ -116,7 +117,6 @@ MAIN_PROG CODE
 #else
     #include <keyboardTouch.asm>
 #endif
-    #include <strings.asm>
     #include <editor.asm>
     #include <files.asm>
     #include <assembler.asm>
@@ -126,7 +126,9 @@ START
     
 ;    #include <testassembler.asm>
 
+initKeyboard:
     keyboardInit
+initOled:
     oledInit
 
 ;    #include <testkeyboard.asm>

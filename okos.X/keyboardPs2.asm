@@ -1,4 +1,4 @@
-;TODO test to see if turnaround time is low enough we can avoid holding clock low
+;PS2 keyboard support, b4 has clock and b3 has data
     
 keyboardInit macro
     ; pull clock latch low

@@ -1,3 +1,8 @@
+
+;To save space, a custom character set is used.
+;0-9a-f are mapped to their hex value for easy parsing.
+
+
 #define CHAR_A .10
 #define CHAR_E .14
 #define CHAR_R .27

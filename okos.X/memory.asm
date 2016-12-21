@@ -15,7 +15,6 @@ keyboardAscii	res 1;* used to be ASCII, not anymore
 
 oledWriteCount	res 1
 oledRow		res 1;* also contains row setting flags in high nibble
-oledCol		res 1;*
 oledSegment	res 1;
 oledFontData	res 2; temp 16bit for decoding font pixels
 
