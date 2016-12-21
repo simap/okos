@@ -205,6 +205,8 @@ The main controller OS program code weighs in at 912 bytes. The keyboard control
 Main controller & OS
 --------
 
+[Full mapfile here](okos.X/dist/default/production/okos.X.production.map)
+
 Note that configuraton fuses on the main PIC are located at `0x300000` and are not actually program flash, the programm usage calculation is flawed! Main controller program memory ends (and includes) address `0x00038f` - 912 bytes. Also `.cinit` is a bug/feature of MPLAB that could be removed with a custom linker file or by switching to absolute mode (as was done for the keyboard controller).
 
 Here's the relevant bit from the mapfile:
@@ -222,6 +224,8 @@ Here's the relevant bit from the mapfile:
 
 Keyboard controller
 --------
+
+[Full mapfile here](keyboard.X/dist/default/production/keyboard.X.production.map)
 
 Note that configuraton fuses on the keyboard controller PIC are located at `0x008007` and are not actually program flash, the programm usage calculation is flawed! The program memory ends (and includes) address `0x00003c ` - 61 x 14-bit instructions or 854 bits = 106.75 bytes.
 
