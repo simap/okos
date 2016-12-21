@@ -20,10 +20,10 @@ Features
 * Filesystem (if you can call it that)
 	* Actually just chopping 32k flash into 16 * 2k files.
 	* 15 files available to user numbered 1-F. Can be either text files or programs.
-* Keyboard driver and api
-	* PS2 keyboard interface. You probably want an extended keyboard with a numeric keypad (more on that later).
-	* Minimal scan code map/table.
-	* Keyboard gives you repeat for free.
+* Touch keyboard
+	* Chainable capacitive keyboard controller in 106.75 bytes.
+	* Can scan up to 256 keys, though OKOS uses only 44 w/ 6 chained controllers.
+	* Normal sized sized qwerty keyboard (keyboard and controller Eagle files included)
 * Very basic command line interface lets you edit files, assemble them, and run programs
 * Minimal instruction set assembler for the PIC MCU
 	* What kind of OS doesn't let you write code?!?
@@ -37,10 +37,10 @@ Features
 	* User program interrupts supported (ISR vector depends on what program is running)
 * OKOS is just ok because OKOS is just OK.
 
-One Kilobyte
----
+One Kilobyte Breakdown
+-------
 
-![Code usage by category](codeBreakdown.png)
+![Code usage by category](images/codeBreakdown.png)
 
 
 Visual Text Editor
@@ -128,12 +128,29 @@ Once you've written and assembled an executable, you can run with with `r <file>
 
 Your program takes over until the computer is reset.
 
+In main.asm, a define can be set to write an example program to flash. Both the assembler version and the text file are included.
+
 Hardware
 ================
 
-OKOS was written on and designed to run on the PIC MCU in the HaD SuperCon badge. The badge exposes a few GPIO, with i2c support. A small bit of interface hardware is required for i2c, and to level shift the 5v PS2 keyboard signals. This was assembled on a home made toner transfer PCB.
+OKOS was written on and designed to run on the PIC MCU in the HaD SuperCon badge. The badge exposes a few GPIO, with i2c support. 
 
-![Schematic diagram](schematic.png)
+Originally OKOS was written with PS2 keyboard support, though later this was replaced with a capacitive touch keyboard so that all code could be accounted for. A define can be set to re-enable PS2 keyboard support without having to make your own keyboard hardware.
+
+The keyboard is regular sized, and the solder joints were sanded down for a smooth surface before it was coated with polyurethane. It has a nice feel to it!
+
+![Touch qwerty keyboard](images/keyboard.jpg)
+
+The capacitive touch keyboard is scanned with a handful of daisy chained pic16f1574 wired to a qwerty touch keyboard. Each runs exactly the same copy of code and scans 8 keys, passing messages from other controllers in the chain.
+
+![Schematic of touch controller](images/schematicTouchController.png)
+
+6 of these controllers chained together make up the keyboard controller. 
+![Assembled controller chain](images/chainedcontrollers.jpg)
+![Controller chain attached to keyboard](images/wiredup.jpg)
+
+There is also a board for placing the OLED display and doing level shifting to support PS2 keyboards. This connects to the expansion port on the badge.
+![Schematic diagram](images/schematicPs2.png)
 
 Notes
 ================
@@ -183,43 +200,38 @@ However, when I went to write the i2c display stuff and the keyboard handling co
 1K Mapfile evidence
 ========
 
-Here's the mapfile section info. Note that configuraton fuses are located at `0x300000` and are not actually program flash, the programm usage calculation is flawed! Program memory ends (and includes) address `0x0003fd` - 1022 bytes. Also `.cinit` is a bug/feature of MPLAB that could be removed with a custom linker file.
+The main controller OS program code weighs in at 912 bytes. The keyboard controller is 106.75 bytes (61 14-bit instructions).
+
+Main controller & OS
+--------
+
+Note that configuraton fuses on the main PIC are located at `0x300000` and are not actually program flash, the programm usage calculation is flawed! Main controller program memory ends (and includes) address `0x00038f` - 912 bytes. Also `.cinit` is a bug/feature of MPLAB that could be removed with a custom linker file or by switching to absolute mode (as was done for the keyboard controller).
+
+Here's the relevant bit from the mapfile:
 
 ```
-MPLINK 5.08, LINKER
-Linker Map File - Created Sun Dec  4 17:28:46 2016
-
-                                 Section Info
-                  Section       Type    Address   Location Size(Bytes)
-                ---------  ---------  ---------  ---------  ---------
-                 RES_VECT       code   0x000000    program   0x000008
-                  HIGHISR       code   0x000008    program   0x000010
-                   LOWISR       code   0x000018    program   0x000004
-               TABLE_DATA       code   0x00001c    program   0x0000ba
-                   .cinit    romdata   0x0000d6    program   0x000002
-                MAIN_PROG       code   0x0000d8    program   0x000326
-.config_300000_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300000    program   0x000001
-.config_300001_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300001    program   0x000001
-.config_300002_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300002    program   0x000001
-.config_300003_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300003    program   0x000001
-.config_300005_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300005    program   0x000001
-.config_300006_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300006    program   0x000001
-.config_300008_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300008    program   0x000001
-.config_300009_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300009    program   0x000001
-.config_30000A_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x30000a    program   0x000001
-.config_30000B_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x30000b    program   0x000001
-.config_30000C_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x30000c    program   0x000001
-.config_30000D_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x30000d    program   0x000001
-               .udata_acs      udata   0x000000       data   0x00003c
-
-
-
                               Program Memory Usage 
                                Start         End      
                            ---------   ---------      
-                            0x000000    0x0003fd      
+                            0x000000    0x00038f      
                             0x300000    0x300003      
                             0x300005    0x300006      
                             0x300008    0x30000d      
-            1034 out of 33048 program addresses used, program memory utilization is 3%
+            924 out of 33048 program addresses used, program memory utilization is 2%
+```
+
+Keyboard controller
+--------
+
+Note that configuraton fuses on the keyboard controller PIC are located at `0x008007` and are not actually program flash, the programm usage calculation is flawed! The program memory ends (and includes) address `0x00003c ` - 61 x 14-bit instructions or 854 bits = 106.75 bytes.
+
+Here's the relevant bit from the mapfile:
+
+```
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x00003c      
+                            0x008007    0x008008      
+            63 out of 4103 program addresses used, program memory utilization is 1%
 ```
