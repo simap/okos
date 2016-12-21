@@ -1,0 +1,236 @@
+MPLINK 5.08, LINKER
+Linker Map File - Created Wed Dec 21 14:57:15 2016
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                 RES_VECT       code   0x000000    program   0x000008
+                  HIGHISR       code   0x000008    program   0x000010
+                   LOWISR       code   0x000018    program   0x000004
+               TABLE_DATA       code   0x00001c    program   0x00008c
+                   .cinit    romdata   0x0000a8    program   0x000002
+                MAIN_PROG       code   0x0000aa    program   0x0002e6
+.config_300000_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300000    program   0x000001
+.config_300001_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300001    program   0x000001
+.config_300002_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300002    program   0x000001
+.config_300003_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300003    program   0x000001
+.config_300005_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300005    program   0x000001
+.config_300006_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300006    program   0x000001
+.config_300008_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300008    program   0x000001
+.config_300009_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x300009    program   0x000001
+.config_30000A_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x30000a    program   0x000001
+.config_30000B_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x30000b    program   0x000001
+.config_30000C_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x30000c    program   0x000001
+.config_30000D_BUILD/DEFAULT/PRODUCTION/MAIN.O    romdata   0x30000d    program   0x000001
+               .udata_acs      udata   0x000000       data   0x00003b
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x00038f      
+                            0x300000    0x300003      
+                            0x300005    0x300006      
+                            0x300008    0x30000d      
+            924 out of 33048 program addresses used, program memory utilization is 2%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                    START   0x00031e    program     static /Users/benh/git/okos/okos.X/main.asm
+           assemblerStart   0x000278    program     static /Users/benh/git/okos/okos.X/assembler.asm
+                checkFsr0   0x000144    program     static /Users/benh/git/okos/okos.X/editor.asm
+            checkFsr0Done   0x000154    program     static /Users/benh/git/okos/okos.X/editor.asm
+      checkInsertOrDelete   0x00019c    program     static /Users/benh/git/okos/okos.X/editor.asm
+  checkInsertOrDeleteDone   0x00019a    program     static /Users/benh/git/okos/okos.X/editor.asm
+             cliAssembler   0x00037e    program     static /Users/benh/git/okos/okos.X/cli.asm
+                cliEditor   0x000384    program     static /Users/benh/git/okos/okos.X/cli.asm
+              cliExecLine   0x00035e    program     static /Users/benh/git/okos/okos.X/cli.asm
+                  cliLoop   0x00034e    program     static /Users/benh/git/okos/okos.X/cli.asm
+                 cliReset   0x000342    program     static /Users/benh/git/okos/okos.X/cli.asm
+                   cliRun   0x000386    program     static /Users/benh/git/okos/okos.X/cli.asm
+               deleteChar   0x0001c2    program     static /Users/benh/git/okos/okos.X/editor.asm
+                 drawLine   0x000172    program     static /Users/benh/git/okos/okos.X/editor.asm
+             drawLineDone   0x000190    program     static /Users/benh/git/okos/okos.X/editor.asm
+             drawLineLoop   0x000180    program     static /Users/benh/git/okos/okos.X/editor.asm
+         editorDoKeyboard   0x00020c    program     static /Users/benh/git/okos/okos.X/editor.asm
+       editorDrawAllLines   0x0001f0    program     static /Users/benh/git/okos/okos.X/editor.asm
+   editorDrawAllLinesLoop   0x0001fa    program     static /Users/benh/git/okos/okos.X/editor.asm
+           editorMainLoop   0x0001e2    program     static /Users/benh/git/okos/okos.X/editor.asm
+                endofmain   0x000390    program     static /Users/benh/git/okos/okos.X/main.asm
+            flushLastPage   0x00022a    program     static /Users/benh/git/okos/okos.X/files.asm
+                  font3x5   0x00001c    program     static /Users/benh/git/okos/okos.X/font.asm
+                    fputc   0x00021c    program     static /Users/benh/git/okos/okos.X/files.asm
+                  fsr0to1   0x00013a    program     static /Users/benh/git/okos/okos.X/editor.asm
+               i2cRestart   0x0000e0    program     static /Users/benh/git/okos/okos.X/oled.asm
+                  i2cWait   0x0000d8    program     static /Users/benh/git/okos/okos.X/oled.asm
+                 i2cWrite   0x0000ee    program     static /Users/benh/git/okos/okos.X/oled.asm
+          i2cWriteAddress   0x0000e8    program     static /Users/benh/git/okos/okos.X/oled.asm
+             initKeyboard   0x00031e    program     static /Users/benh/git/okos/okos.X/main.asm
+                 initOled   0x000326    program     static /Users/benh/git/okos/okos.X/main.asm
+               insertChar   0x0001ce    program     static /Users/benh/git/okos/okos.X/editor.asm
+           insertCharDone   0x0001dc    program     static /Users/benh/git/okos/okos.X/editor.asm
+           insertCharLoop   0x0001d0    program     static /Users/benh/git/okos/okos.X/editor.asm
+                      isr   0x000018    program     static /Users/benh/git/okos/okos.X/main.asm
+                 loadFile   0x000248    program     static /Users/benh/git/okos/okos.X/files.asm
+             loadFileLoop   0x00024a    program     static /Users/benh/git/okos/okos.X/files.asm
+                 moveDown   0x0001b8    program     static /Users/benh/git/okos/okos.X/editor.asm
+                   moveUp   0x0001ae    program     static /Users/benh/git/okos/okos.X/editor.asm
+                 nextLine   0x00016a    program     static /Users/benh/git/okos/okos.X/editor.asm
+                 nextWord   0x000314    program     static /Users/benh/git/okos/okos.X/assembler.asm
+         oledDrawCharLoop   0x0000bc    program     static /Users/benh/git/okos/okos.X/oled.asm
+        oledDrawFlushLine   0x0000fa    program     static /Users/benh/git/okos/okos.X/oled.asm
+    oledDrawFlushLineLoop   0x00011a    program     static /Users/benh/git/okos/okos.X/oled.asm
+        oledFontShiftLoop   0x0000c6    program     static /Users/benh/git/okos/okos.X/oled.asm
+            oledWriteChar   0x0000aa    program     static /Users/benh/git/okos/okos.X/oled.asm
+              opcodeTable   0x00006c    program     static /Users/benh/git/okos/okos.X/opcodes.asm
+                 openFile   0x00025c    program     static /Users/benh/git/okos/okos.X/files.asm
+                 parseArg   0x0002f2    program     static /Users/benh/git/okos/okos.X/assembler.asm
+             parseArgChar   0x0002f8    program     static /Users/benh/git/okos/okos.X/assembler.asm
+       parseAssemblerDone   0x0002ec    program     static /Users/benh/git/okos/okos.X/assembler.asm
+       parseAssemblerLine   0x000278    program     static /Users/benh/git/okos/okos.X/assembler.asm
+   parseAssemblerLineDone   0x0002e8    program     static /Users/benh/git/okos/okos.X/assembler.asm
+                parseDone   0x000310    program     static /Users/benh/git/okos/okos.X/assembler.asm
+    parseMnemonicCharLoop   0x0002a2    program     static /Users/benh/git/okos/okos.X/assembler.asm
+        parseMnemonicDone   0x0002bc    program     static /Users/benh/git/okos/okos.X/assembler.asm
+   parseMnemonicTableLoop   0x000298    program     static /Users/benh/git/okos/okos.X/assembler.asm
+             previousLine   0x000156    program     static /Users/benh/git/okos/okos.X/editor.asm
+         previousLineLoop   0x000158    program     static /Users/benh/git/okos/okos.X/editor.asm
+                  readKey   0x00012a    program     static /Users/benh/git/okos/okos.X/keyboardTouch.asm
+           resetBufferFsr   0x000134    program     static /Users/benh/git/okos/okos.X/editor.asm
+              resetvector   0x000000    program     static /Users/benh/git/okos/okos.X/main.asm
+               return_bra   0x000016    program     static /Users/benh/git/okos/okos.X/main.asm
+                 saveFile   0x00023a    program     static /Users/benh/git/okos/okos.X/files.asm
+             saveFileLoop   0x00023e    program     static /Users/benh/git/okos/okos.X/files.asm
+            setFsr2ToLine   0x0000f4    program     static /Users/benh/git/okos/okos.X/oled.asm
+                shiftLoop   0x000300    program     static /Users/benh/git/okos/okos.X/assembler.asm
+              startEditor   0x0001e2    program     static /Users/benh/git/okos/okos.X/editor.asm
+          startFlashWrite   0x00026a    program     static /Users/benh/git/okos/okos.X/files.asm
+                  userIsr   0x000008    program     static /Users/benh/git/okos/okos.X/main.asm
+                 writeArg   0x000314    program     static /Users/benh/git/okos/okos.X/assembler.asm
+             assemblerArg   0x000012       data     static /Users/benh/git/okos/okos.X/memory.asm
+            assemblerTemp   0x000011       data     static /Users/benh/git/okos/okos.X/memory.asm
+                bitbucket   0x000039       data     static /Users/benh/git/okos/okos.X/memory.asm
+                   buffer   0x00003a       data     static /Users/benh/git/okos/okos.X/memory.asm
+              currentFile   0x000000       data     static /Users/benh/git/okos/okos.X/memory.asm
+                  cursorX   0x00000b       data     static /Users/benh/git/okos/okos.X/memory.asm
+                  cursorY   0x00000c       data     static /Users/benh/git/okos/okos.X/memory.asm
+             editorOffset   0x00000a       data     static /Users/benh/git/okos/okos.X/memory.asm
+               editorTemp   0x000009       data     static /Users/benh/git/okos/okos.X/memory.asm
+                    flags   0x000001       data     static /Users/benh/git/okos/okos.X/memory.asm
+                fsr0_save   0x000017       data     static /Users/benh/git/okos/okos.X/memory.asm
+            keyboardAscii   0x000003       data     static /Users/benh/git/okos/okos.X/memory.asm
+             keyboardCode   0x000002       data     static /Users/benh/git/okos/okos.X/memory.asm
+                     line   0x000019       data     static /Users/benh/git/okos/okos.X/memory.asm
+               mismatches   0x000010       data     static /Users/benh/git/okos/okos.X/memory.asm
+             oledFontData   0x000007       data     static /Users/benh/git/okos/okos.X/memory.asm
+                  oledRow   0x000005       data     static /Users/benh/git/okos/okos.X/memory.asm
+              oledSegment   0x000006       data     static /Users/benh/git/okos/okos.X/memory.asm
+           oledWriteCount   0x000004       data     static /Users/benh/git/okos/okos.X/memory.asm
+                   opcode   0x00000d       data     static /Users/benh/git/okos/okos.X/memory.asm
+              opcodeIndex   0x00000f       data     static /Users/benh/git/okos/okos.X/memory.asm
+              tblptr_save   0x000015       data     static /Users/benh/git/okos/okos.X/memory.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+              resetvector   0x000000    program     static /Users/benh/git/okos/okos.X/main.asm
+                  userIsr   0x000008    program     static /Users/benh/git/okos/okos.X/main.asm
+               return_bra   0x000016    program     static /Users/benh/git/okos/okos.X/main.asm
+                      isr   0x000018    program     static /Users/benh/git/okos/okos.X/main.asm
+                  font3x5   0x00001c    program     static /Users/benh/git/okos/okos.X/font.asm
+              opcodeTable   0x00006c    program     static /Users/benh/git/okos/okos.X/opcodes.asm
+            oledWriteChar   0x0000aa    program     static /Users/benh/git/okos/okos.X/oled.asm
+         oledDrawCharLoop   0x0000bc    program     static /Users/benh/git/okos/okos.X/oled.asm
+        oledFontShiftLoop   0x0000c6    program     static /Users/benh/git/okos/okos.X/oled.asm
+                  i2cWait   0x0000d8    program     static /Users/benh/git/okos/okos.X/oled.asm
+               i2cRestart   0x0000e0    program     static /Users/benh/git/okos/okos.X/oled.asm
+          i2cWriteAddress   0x0000e8    program     static /Users/benh/git/okos/okos.X/oled.asm
+                 i2cWrite   0x0000ee    program     static /Users/benh/git/okos/okos.X/oled.asm
+            setFsr2ToLine   0x0000f4    program     static /Users/benh/git/okos/okos.X/oled.asm
+        oledDrawFlushLine   0x0000fa    program     static /Users/benh/git/okos/okos.X/oled.asm
+    oledDrawFlushLineLoop   0x00011a    program     static /Users/benh/git/okos/okos.X/oled.asm
+                  readKey   0x00012a    program     static /Users/benh/git/okos/okos.X/keyboardTouch.asm
+           resetBufferFsr   0x000134    program     static /Users/benh/git/okos/okos.X/editor.asm
+                  fsr0to1   0x00013a    program     static /Users/benh/git/okos/okos.X/editor.asm
+                checkFsr0   0x000144    program     static /Users/benh/git/okos/okos.X/editor.asm
+            checkFsr0Done   0x000154    program     static /Users/benh/git/okos/okos.X/editor.asm
+             previousLine   0x000156    program     static /Users/benh/git/okos/okos.X/editor.asm
+         previousLineLoop   0x000158    program     static /Users/benh/git/okos/okos.X/editor.asm
+                 nextLine   0x00016a    program     static /Users/benh/git/okos/okos.X/editor.asm
+                 drawLine   0x000172    program     static /Users/benh/git/okos/okos.X/editor.asm
+             drawLineLoop   0x000180    program     static /Users/benh/git/okos/okos.X/editor.asm
+             drawLineDone   0x000190    program     static /Users/benh/git/okos/okos.X/editor.asm
+  checkInsertOrDeleteDone   0x00019a    program     static /Users/benh/git/okos/okos.X/editor.asm
+      checkInsertOrDelete   0x00019c    program     static /Users/benh/git/okos/okos.X/editor.asm
+                   moveUp   0x0001ae    program     static /Users/benh/git/okos/okos.X/editor.asm
+                 moveDown   0x0001b8    program     static /Users/benh/git/okos/okos.X/editor.asm
+               deleteChar   0x0001c2    program     static /Users/benh/git/okos/okos.X/editor.asm
+               insertChar   0x0001ce    program     static /Users/benh/git/okos/okos.X/editor.asm
+           insertCharLoop   0x0001d0    program     static /Users/benh/git/okos/okos.X/editor.asm
+           insertCharDone   0x0001dc    program     static /Users/benh/git/okos/okos.X/editor.asm
+           editorMainLoop   0x0001e2    program     static /Users/benh/git/okos/okos.X/editor.asm
+              startEditor   0x0001e2    program     static /Users/benh/git/okos/okos.X/editor.asm
+       editorDrawAllLines   0x0001f0    program     static /Users/benh/git/okos/okos.X/editor.asm
+   editorDrawAllLinesLoop   0x0001fa    program     static /Users/benh/git/okos/okos.X/editor.asm
+         editorDoKeyboard   0x00020c    program     static /Users/benh/git/okos/okos.X/editor.asm
+                    fputc   0x00021c    program     static /Users/benh/git/okos/okos.X/files.asm
+            flushLastPage   0x00022a    program     static /Users/benh/git/okos/okos.X/files.asm
+                 saveFile   0x00023a    program     static /Users/benh/git/okos/okos.X/files.asm
+             saveFileLoop   0x00023e    program     static /Users/benh/git/okos/okos.X/files.asm
+                 loadFile   0x000248    program     static /Users/benh/git/okos/okos.X/files.asm
+             loadFileLoop   0x00024a    program     static /Users/benh/git/okos/okos.X/files.asm
+                 openFile   0x00025c    program     static /Users/benh/git/okos/okos.X/files.asm
+          startFlashWrite   0x00026a    program     static /Users/benh/git/okos/okos.X/files.asm
+       parseAssemblerLine   0x000278    program     static /Users/benh/git/okos/okos.X/assembler.asm
+           assemblerStart   0x000278    program     static /Users/benh/git/okos/okos.X/assembler.asm
+   parseMnemonicTableLoop   0x000298    program     static /Users/benh/git/okos/okos.X/assembler.asm
+    parseMnemonicCharLoop   0x0002a2    program     static /Users/benh/git/okos/okos.X/assembler.asm
+        parseMnemonicDone   0x0002bc    program     static /Users/benh/git/okos/okos.X/assembler.asm
+   parseAssemblerLineDone   0x0002e8    program     static /Users/benh/git/okos/okos.X/assembler.asm
+       parseAssemblerDone   0x0002ec    program     static /Users/benh/git/okos/okos.X/assembler.asm
+                 parseArg   0x0002f2    program     static /Users/benh/git/okos/okos.X/assembler.asm
+             parseArgChar   0x0002f8    program     static /Users/benh/git/okos/okos.X/assembler.asm
+                shiftLoop   0x000300    program     static /Users/benh/git/okos/okos.X/assembler.asm
+                parseDone   0x000310    program     static /Users/benh/git/okos/okos.X/assembler.asm
+                 writeArg   0x000314    program     static /Users/benh/git/okos/okos.X/assembler.asm
+                 nextWord   0x000314    program     static /Users/benh/git/okos/okos.X/assembler.asm
+             initKeyboard   0x00031e    program     static /Users/benh/git/okos/okos.X/main.asm
+                    START   0x00031e    program     static /Users/benh/git/okos/okos.X/main.asm
+                 initOled   0x000326    program     static /Users/benh/git/okos/okos.X/main.asm
+                 cliReset   0x000342    program     static /Users/benh/git/okos/okos.X/cli.asm
+                  cliLoop   0x00034e    program     static /Users/benh/git/okos/okos.X/cli.asm
+              cliExecLine   0x00035e    program     static /Users/benh/git/okos/okos.X/cli.asm
+             cliAssembler   0x00037e    program     static /Users/benh/git/okos/okos.X/cli.asm
+                cliEditor   0x000384    program     static /Users/benh/git/okos/okos.X/cli.asm
+                   cliRun   0x000386    program     static /Users/benh/git/okos/okos.X/cli.asm
+                endofmain   0x000390    program     static /Users/benh/git/okos/okos.X/main.asm
+              currentFile   0x000000       data     static /Users/benh/git/okos/okos.X/memory.asm
+                    flags   0x000001       data     static /Users/benh/git/okos/okos.X/memory.asm
+             keyboardCode   0x000002       data     static /Users/benh/git/okos/okos.X/memory.asm
+            keyboardAscii   0x000003       data     static /Users/benh/git/okos/okos.X/memory.asm
+           oledWriteCount   0x000004       data     static /Users/benh/git/okos/okos.X/memory.asm
+                  oledRow   0x000005       data     static /Users/benh/git/okos/okos.X/memory.asm
+              oledSegment   0x000006       data     static /Users/benh/git/okos/okos.X/memory.asm
+             oledFontData   0x000007       data     static /Users/benh/git/okos/okos.X/memory.asm
+               editorTemp   0x000009       data     static /Users/benh/git/okos/okos.X/memory.asm
+             editorOffset   0x00000a       data     static /Users/benh/git/okos/okos.X/memory.asm
+                  cursorX   0x00000b       data     static /Users/benh/git/okos/okos.X/memory.asm
+                  cursorY   0x00000c       data     static /Users/benh/git/okos/okos.X/memory.asm
+                   opcode   0x00000d       data     static /Users/benh/git/okos/okos.X/memory.asm
+              opcodeIndex   0x00000f       data     static /Users/benh/git/okos/okos.X/memory.asm
+               mismatches   0x000010       data     static /Users/benh/git/okos/okos.X/memory.asm
+            assemblerTemp   0x000011       data     static /Users/benh/git/okos/okos.X/memory.asm
+             assemblerArg   0x000012       data     static /Users/benh/git/okos/okos.X/memory.asm
+              tblptr_save   0x000015       data     static /Users/benh/git/okos/okos.X/memory.asm
+                fsr0_save   0x000017       data     static /Users/benh/git/okos/okos.X/memory.asm
+                     line   0x000019       data     static /Users/benh/git/okos/okos.X/memory.asm
+                bitbucket   0x000039       data     static /Users/benh/git/okos/okos.X/memory.asm
+                   buffer   0x00003a       data     static /Users/benh/git/okos/okos.X/memory.asm
+
+
